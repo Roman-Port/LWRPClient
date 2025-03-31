@@ -1,6 +1,7 @@
 ﻿using LWRPClient.Entities;
 using LWRPClient.Exceptions;
-using LWRPClient.Transports;
+using LWRPClient.Layer1.Transports;
+using LWRPClient.Layer1;
 using System;
 using System.Collections.Generic;
 using System.Net;

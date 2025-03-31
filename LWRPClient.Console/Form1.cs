@@ -1,6 +1,7 @@
 ﻿using LWRPClient.Console.Panels;
 using LWRPClient.Console.Properties;
-using LWRPClient.Transports;
+using LWRPClient.Layer1;
+using LWRPClient.Layer1.Transports;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;

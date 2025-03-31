@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LWRPClient
+namespace LWRPClient.Layer1
 {
     public class LWRPToken
     {
@@ -91,24 +91,28 @@ namespace LWRPClient
                                 throw new Exception("Unknown escape code: " + chars[index]);
                         }
                         escaped = false;
-                    } else if (chars[index] == '\\')
+                    }
+                    else if (chars[index] == '\\')
                     {
                         //Starting escape; discard this character
                         escaped = true;
-                    } else if (chars[index] == '\"')
+                    }
+                    else if (chars[index] == '\"')
                     {
                         //End substring
                         index++;
                         break;
-                    } else
+                    }
+                    else
                     {
                         //Regular character
                         text += chars[index];
                     }
                     index++;
                 }
-                
-            } else
+
+            }
+            else
             {
                 //This is not a substring which makes things easier. Simply read to a colon, space, or \r\n
                 while (index < chars.Length && chars[index] != ' ' && chars[index] != ':' && chars[index] != '\n')

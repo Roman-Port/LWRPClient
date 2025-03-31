@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LWRPClient.Transports
+namespace LWRPClient.Layer1.Transports
 {
     public class LWRPTransportErrorException : Exception
     {

@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LWRPClient
+namespace LWRPClient.Layer1
 {
     public delegate void ILWRPTransport_OnConnected(ILWRPTransport transport);
     public delegate void ILWRPTransport_OnDisconnected(ILWRPTransport transport, Exception ex);

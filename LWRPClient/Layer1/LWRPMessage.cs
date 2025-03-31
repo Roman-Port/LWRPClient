@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text;
 
-namespace LWRPClient
+namespace LWRPClient.Layer1
 {
     public class LWRPMessage
     {

@@ -1,3 +1,4 @@
+using LWRPClient.Layer1;
 using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace LWRPClient.Tests

@@ -6,7 +6,7 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace LWRPClient.Transports
+namespace LWRPClient.Layer1.Transports
 {
     public class TcpLWRPTransport : ILWRPTransport
     {
@@ -143,7 +143,8 @@ namespace LWRPClient.Transports
                 try
                 {
                     read = sock.EndReceive(ar);
-                } catch (Exception ex)
+                }
+                catch (Exception ex)
                 {
                     SocketError(ex);
                     return;
@@ -253,7 +254,8 @@ namespace LWRPClient.Transports
 
                 //Set result
                 promise.SetResult(sent);
-            } catch (Exception ex)
+            }
+            catch (Exception ex)
             {
                 //Raise error on the promise
                 promise.SetException(ex);
