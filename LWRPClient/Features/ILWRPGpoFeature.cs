@@ -5,19 +5,19 @@ using System.Text;
 namespace LWRPClient.Features
 {
     /// <summary>
-    /// The feature for GPI (to network).
+    /// The feature for GPO (from network).
     /// </summary>
-    public interface ILWRPGpiFeature : ILWRPBatchUpdateFeature<ILWRPGpiPort>
+    public interface ILWRPGpoFeature : ILWRPBatchUpdateFeature<ILWRPGpoPort>
     {
         /// <summary>
-        /// The number of GPIs available.
+        /// The number of GPOs available.
         /// </summary>
         int Count { get; }
 
         /// <summary>
         /// Gets a port by index (starting at 0).
         /// </summary>
-        ILWRPGpiPort this[int index]
+        ILWRPGpoPort this[int index]
         {
             get;
         }

@@ -41,9 +41,8 @@ namespace LWRPClient
                 features.Add(new DestinationsFeature(this));
             if ((enabledFeatures & LWRPEnabledFeature.GPI) == LWRPEnabledFeature.GPI)
                 features.Add(new GpiFeature(this));
-
-            //Misc
-            readyTask = new TaskCompletionSource<LWRPConnection>();
+            if ((enabledFeatures & LWRPEnabledFeature.GPO) == LWRPEnabledFeature.GPO)
+                features.Add(new GpoFeature(this));
         }
 
         public LWRPConnection(IPAddress address, LWRPEnabledFeature features, int port = 93) : this(new TcpLWRPTransport(new IPEndPoint(address, port)), features)
@@ -83,7 +82,7 @@ namespace LWRPClient
         /// <summary>
         /// Task that is completed when all info data is recieved for the first time.
         /// </summary>
-        private TaskCompletionSource<LWRPConnection> readyTask;
+        private TaskCompletionSource<LWRPConnection> readyTask = new TaskCompletionSource<LWRPConnection>();
 
         /// <summary>
         /// Current message subscriptions.
@@ -160,6 +159,11 @@ namespace LWRPClient
         /// LWRP GPIs (to network) on this device.
         /// </summary>
         public ILWRPGpiFeature GPIs => GetFeature<GpiFeature>("GPIs");
+
+        /// <summary>
+        /// LWRP GPIs (from network) on this device.
+        /// </summary>
+        public ILWRPGpoFeature GPOs => GetFeature<GpoFeature>("GPOs");
 
         /// <summary>
         /// LWRP version from device. May be null. Only readable once info data has been received.

@@ -12,6 +12,8 @@ namespace LWRPClient.Console.Controls
 {
     public partial class GpioPinsControl : Control
     {
+        public delegate void PinUpdatedEvent(GpioPinsControl control, int index, LWRPPinState state);
+
         public GpioPinsControl()
         {
             pinsAdapter = new PinsAdapter(this);
@@ -25,6 +27,11 @@ namespace LWRPClient.Console.Controls
         private readonly LWRPPinState[] pins = new LWRPPinState[5];
         private ILWRPPins pinsAdapter;
         private bool readOnly;
+
+        /// <summary>
+        /// Event raised when a user updates a pin.
+        /// </summary>
+        public event PinUpdatedEvent PinUpdated;
 
         public ILWRPPins Pins => pinsAdapter;
 
@@ -170,6 +177,7 @@ namespace LWRPClient.Console.Controls
 
                 //Apply
                 pins[index] = newState;
+                PinUpdated?.Invoke(this, index, newState);
                 Invalidate();
             }
         }

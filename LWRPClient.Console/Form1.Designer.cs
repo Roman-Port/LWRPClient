@@ -59,12 +59,14 @@
             this.gpiTab = new System.Windows.Forms.TabPage();
             this.gpiPanel = new System.Windows.Forms.Panel();
             this.gpoTab = new System.Windows.Forms.TabPage();
+            this.gpoPanel = new System.Windows.Forms.Panel();
             this.groupBox1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.tabControl.SuspendLayout();
             this.sourcesTab.SuspendLayout();
             this.destinationsTab.SuspendLayout();
             this.gpiTab.SuspendLayout();
+            this.gpoTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -386,12 +388,22 @@
             // 
             // gpoTab
             // 
+            this.gpoTab.Controls.Add(this.gpoPanel);
             this.gpoTab.Location = new System.Drawing.Point(4, 22);
             this.gpoTab.Name = "gpoTab";
             this.gpoTab.Size = new System.Drawing.Size(521, 374);
             this.gpoTab.TabIndex = 3;
             this.gpoTab.Text = "GPO";
             this.gpoTab.UseVisualStyleBackColor = true;
+            // 
+            // gpoPanel
+            // 
+            this.gpoPanel.AutoScroll = true;
+            this.gpoPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gpoPanel.Location = new System.Drawing.Point(0, 0);
+            this.gpoPanel.Name = "gpoPanel";
+            this.gpoPanel.Size = new System.Drawing.Size(521, 374);
+            this.gpoPanel.TabIndex = 1;
             // 
             // Form1
             // 
@@ -414,6 +426,7 @@
             this.sourcesTab.ResumeLayout(false);
             this.destinationsTab.ResumeLayout(false);
             this.gpiTab.ResumeLayout(false);
+            this.gpoTab.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -452,6 +465,7 @@
         private System.Windows.Forms.TabPage gpiTab;
         private System.Windows.Forms.Panel gpiPanel;
         private System.Windows.Forms.TabPage gpoTab;
+        private System.Windows.Forms.Panel gpoPanel;
     }
 }
 

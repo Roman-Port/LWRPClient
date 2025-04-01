@@ -5,9 +5,9 @@ using System.Text;
 namespace LWRPClient
 {
     /// <summary>
-    /// A GPI (to network) port containing 5 pins. 
+    /// A GPO (from network) port containing 5 pins. 
     /// </summary>
-    public interface ILWRPGpiPort
+    public interface ILWRPGpoPort
     {
         /// <summary>
         /// The index of this port, starting at 1.
@@ -18,5 +18,10 @@ namespace LWRPClient
         /// The pins on this port.
         /// </summary>
         ILWRPPins Pins { get; }
+
+        /// <summary>
+        /// True if changes are waiting to be applied.
+        /// </summary>
+        bool ChangesPending { get; }
     }
 }

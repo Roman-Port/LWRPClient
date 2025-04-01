@@ -43,11 +43,12 @@ namespace LWRPClient.Console
                 transport.OnMessageReceived += Conn_OnMessageReceived;
 
                 //Create connection
-                conn = new LWRPConnection(transport, LWRPEnabledFeature.SOURCES | LWRPEnabledFeature.DESTINATIONS | LWRPEnabledFeature.GPI);
+                conn = new LWRPConnection(transport, LWRPEnabledFeature.SOURCES | LWRPEnabledFeature.DESTINATIONS | LWRPEnabledFeature.GPI | LWRPEnabledFeature.GPO);
                 conn.OnInfoDataReceived += Conn_OnInfoDataReceived;
                 conn.Sources.OnBatchUpdate += Conn_OnSrcBatchUpdate;
                 conn.Destinations.OnBatchUpdate += Conn_OnDstBatchUpdate;
                 conn.GPIs.OnBatchUpdate += GPIs_OnBatchUpdate;
+                conn.GPOs.OnBatchUpdate += GPOs_OnBatchUpdate;
                 conn.OnConnectionStateUpdate += Conn_OnConnectionStateUpdate;
                 conn.Initialize();
 
@@ -63,7 +64,6 @@ namespace LWRPClient.Console
                 conn.Dispose();
                 conn = null;
             }
-            
         }
 
         private void Conn_OnInfoDataReceived(LWRPConnection conn)
@@ -194,6 +194,52 @@ namespace LWRPClient.Console
                     ctrl.SetPins(s.Pins.ToArray());
                 }
             });
+        }
+
+        private void GPOs_OnBatchUpdate(LWRPConnection conn, ILWRPGpoPort[] updates)
+        {
+            Invoke((MethodInvoker)delegate
+            {
+                foreach (var s in updates)
+                {
+                    //Find the source control belonging to this, if it exists
+                    LwGpoControl ctrl = null;
+                    foreach (var c in gpoPanel.Controls)
+                    {
+                        if (c is LwGpoControl cs && cs.Index == s.Index)
+                        {
+                            ctrl = cs;
+                        }
+                    }
+
+                    //If not found, create it
+                    if (ctrl == null)
+                    {
+                        //Create
+                        ctrl = new LwGpoControl(s.Index)
+                        {
+                            Dock = DockStyle.Top,
+                            ReadOnly = false
+                        };
+                        ctrl.PinUpdated += GpoPinUserUpdate;
+
+                        //Insert
+                        gpoPanel.Controls.Add(ctrl);
+
+                        //Sort
+                        gpoPanel.Controls.SetChildIndex(ctrl, 0);
+                    }
+
+                    //Update
+                    ctrl.SetPins(s.Pins.ToArray());
+                }
+            });
+        }
+
+        private void GpoPinUserUpdate(LwGpoControl control, int index, LWRPPinState state)
+        {
+            //Dispatch
+            conn.GPOs[control.Index - 1].Pins[index] = state;
         }
 
         private void Conn_OnMessageReceived(ILWRPTransport transport, LWRPMessage message)

@@ -1,4 +1,5 @@
-﻿using LWRPClient.Features;
+﻿using LWRPClient.Exceptions;
+using LWRPClient.Features;
 using LWRPClient.Layer1;
 using System;
 using System.Collections.Generic;
@@ -6,6 +7,9 @@ using System.Text;
 
 namespace LWRPClient.Core.GPIO
 {
+    /// <summary>
+    /// Feature for GPI (to network).
+    /// </summary>
     class GpiFeature : BaseGpioFeature<ILWRPGpiPort>, ILWRPGpiFeature
     {
         public GpiFeature(LWRPConnection connection) : base(connection)
@@ -21,10 +25,30 @@ namespace LWRPClient.Core.GPIO
 
         private readonly GpiPort[] ports = new GpiPort[256];
 
+        /// <summary>
+        /// Gets the count from the connection without first seeing if it is available.
+        /// </summary>
+        protected override int CountUnchecked => connection.GpiNum;
+
+        /// <summary>
+        /// Gets a GPI port from an index.
+        /// </summary>
+        public ILWRPGpiPort this[int index]
+        {
+            get
+            {
+                //Make sure the index is valid. This also ensures info data is ready
+                if (index < 0 || index >= Count)
+                    throw new IndexOutOfRangeException();
+
+                return ports[index];
+            }
+        }
+
         private void Connection_OnInfoDataReceived(LWRPConnection conn)
         {
             //Check if the device supports GPI. If it doesn't this will return a bad command error
-            if (conn.GpiNum > 0)
+            if (Count > 0)
             {
                 //Request info; This also subscribes us to updates
                 conn.transport.SendMessage(new LWRPMessage("ADD", new LWRPToken[][]
@@ -40,7 +64,7 @@ namespace LWRPClient.Core.GPIO
 
         private void OnUpdateMessageReceived(LWRPMessage message, bool inGroup)
         {
-            //Get the source index (starting at 1)
+            //Get the GPI index (starting at 1)
             int index = int.Parse(message.Arguments[0][0].Content);
             GpiPort port = ports[index - 1];
 

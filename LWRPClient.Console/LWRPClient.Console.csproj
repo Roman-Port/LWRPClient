@@ -70,6 +70,12 @@
     <Compile Include="Panels\LwGpiControl.Designer.cs">
       <DependentUpon>LwGpiControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Panels\LwGpoControl.cs">
+      <SubType>UserControl</SubType>
+    </Compile>
+    <Compile Include="Panels\LwGpoControl.Designer.cs">
+      <DependentUpon>LwGpoControl.cs</DependentUpon>
+    </Compile>
     <Compile Include="Panels\LwSourceControl.cs">
       <SubType>UserControl</SubType>
     </Compile>
@@ -86,6 +92,9 @@
     </EmbeddedResource>
     <EmbeddedResource Include="Panels\LwGpiControl.resx">
       <DependentUpon>LwGpiControl.cs</DependentUpon>
+    </EmbeddedResource>
+    <EmbeddedResource Include="Panels\LwGpoControl.resx">
+      <DependentUpon>LwGpoControl.cs</DependentUpon>
     </EmbeddedResource>
     <EmbeddedResource Include="Panels\LwSourceControl.resx">
       <DependentUpon>LwSourceControl.cs</DependentUpon>

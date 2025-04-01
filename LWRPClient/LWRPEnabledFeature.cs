@@ -24,5 +24,10 @@ namespace LWRPClient
         /// GPI (to network)
         /// </summary>
         GPI = (1 << 2),
+
+        /// <summary>
+        /// GPO (from network)
+        /// </summary>
+        GPO = (1 << 3),
     }
 }

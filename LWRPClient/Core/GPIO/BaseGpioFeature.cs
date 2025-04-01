@@ -1,4 +1,5 @@
-﻿using System;
+﻿using LWRPClient.Exceptions;
+using System;
 using System.Collections.Generic;
 using System.Text;
 
@@ -8,6 +9,25 @@ namespace LWRPClient.Core.GPIO
     {
         protected BaseGpioFeature(LWRPConnection connection) : base(connection)
         {
+        }
+
+        /// <summary>
+        /// Gets the count from the connection without first seeing if it is available.
+        /// </summary>
+        protected abstract int CountUnchecked { get; }
+
+        /// <summary>
+        /// The number of GPIOs available on the device, checking if this is valid yet.
+        /// </summary>
+        public int Count
+        {
+            get
+            {
+                //Make sure data is available
+                if (!connection.HasInfoData)
+                    throw new InfoDataNotReadyException();
+                return CountUnchecked;
+            }
         }
 
         /// <summary>
