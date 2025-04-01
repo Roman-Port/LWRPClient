@@ -7,17 +7,24 @@ using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
 using System.Threading.Tasks;
+using System.Linq;
+using LWRPClient.Core;
+using LWRPClient.Features;
+using LWRPClient.Core.Sources;
+using LWRPClient.Core.Destinations;
 
 namespace LWRPClient
 {
     public class LWRPConnection : IDisposable
     {
         public delegate void InfoDataReceivedEventArgs(LWRPConnection conn);
-        public delegate void SrcBatchUpdateEventArgs(LWRPConnection conn, ILWRPSource[] sources);
-        public delegate void DstBatchUpdateEventArgs(LWRPConnection conn, ILWRPDestination[] destinations);
         public delegate void ConnectionStateUpdateEventArgs(LWRPConnection conn, LWRPState state);
+        public delegate void GroupProcessingBeginEventArgs(LWRPConnection conn);
+        public delegate void GroupProcessingEndEventArgs(LWRPConnection conn);
+        public delegate void MessageSubscriptionEvent(LWRPMessage message, bool inGroup);
+        public delegate void BatchUpdateEventArgs<T>(LWRPConnection conn, T[] updates);
 
-        public LWRPConnection(ILWRPTransport transport)
+        public LWRPConnection(ILWRPTransport transport, LWRPEnabledFeature enabledFeatures)
         {
             //Set transport and map events
             this.transport = transport;
@@ -25,37 +32,25 @@ namespace LWRPClient
             transport.OnDisconnected += Transport_OnDisconnected;
             transport.OnMessageReceived += Transport_OnMessageReceived;
 
-            //Create sources
-            for (int i = 0; i < sources.Length; i++)
-                sources[i] = new LwSrc(this, i + 1);
-
-            //Create destinations
-            for (int i = 0; i < destinations.Length; i++)
-                destinations[i] = new LwDst(this, i + 1);
+            //Create features
+            this.enabledFeatures = enabledFeatures;
+            if ((enabledFeatures & LWRPEnabledFeature.SOURCES) == LWRPEnabledFeature.SOURCES)
+                features.Add(new SourcesFeature(this));
+            if ((enabledFeatures & LWRPEnabledFeature.DESTINATIONS) == LWRPEnabledFeature.DESTINATIONS)
+                features.Add(new DestinationsFeature(this));
 
             //Misc
             readyTask = new TaskCompletionSource<LWRPConnection>();
         }
 
-        public LWRPConnection(IPAddress address, int port = 93) : this(new TcpLWRPTransport(new IPEndPoint(address, port)))
+        public LWRPConnection(IPAddress address, LWRPEnabledFeature features, int port = 93) : this(new TcpLWRPTransport(new IPEndPoint(address, port)), features)
         {
 
         }
 
-        private readonly ILWRPTransport transport;
-        private readonly object mutex = new object();
-        private readonly LwSrc[] sources = new LwSrc[256];
-        private readonly LwDst[] destinations = new LwDst[256];
-
-        /// <summary>
-        /// Sources that have been updated in the current event group being processed
-        /// </summary>
-        private readonly List<LwSrc> pendingUpdateSources = new List<LwSrc>();
-
-        /// <summary>
-        /// Destinations that have been updated in the current event group being processed
-        /// </summary>
-        private readonly List<LwDst> pendingUpdateDestinations = new List<LwDst>();
+        internal readonly ILWRPTransport transport;
+        internal readonly object mutex = new object();
+        private readonly LWRPEnabledFeature enabledFeatures;
 
         /// <summary>
         /// True if we've called Initialize to keep the socket connection
@@ -83,14 +78,20 @@ namespace LWRPClient
         private LWRPState state = LWRPState.PRE_INIT;
 
         /// <summary>
-        /// Bit flag of all first-time connect parts that are required to consider this connection "ready"
-        /// </summary>
-        private int initInfoRecieved = 0;
-
-        /// <summary>
         /// Task that is completed when all info data is recieved for the first time.
         /// </summary>
         private TaskCompletionSource<LWRPConnection> readyTask;
+
+        /// <summary>
+        /// Current message subscriptions.
+        /// </summary>
+        private readonly List<MessageSubscription> subscriptions = new List<MessageSubscription>();
+
+        /// <summary>
+        /// Features that are currently enabled. Will only be added to during construction.
+        /// There should only be one of each type in this.
+        /// </summary>
+        private readonly List<BaseFeature> features = new List<BaseFeature>();
 
         //The following are details obtained with "VER"
         private string infoLwrpVer;
@@ -124,48 +125,33 @@ namespace LWRPClient
         }
 
         /// <summary>
-        /// LWRP sources on this device.
+        /// Gets the features requested to be enabled.
         /// </summary>
-        public ILWRPSource[] Sources
+        public LWRPEnabledFeature EnabledFeatures => enabledFeatures;
+
+        /// <summary>
+        /// True if basic information is received.
+        /// </summary>
+        public bool HasInfoData
         {
             get
             {
-                ILWRPSource[] result;
+                bool result;
                 lock (mutex)
-                {
-                    //Make sure we have info data
-                    if (!hasInfoData)
-                        throw new InfoDataNotReadyException();
-
-                    //Create array of this size and copy into it
-                    result = new ILWRPSource[SrcNum];
-                    Array.Copy(sources, result, SrcNum);
-                }
+                    result = hasInfoData;
                 return result;
             }
         }
 
         /// <summary>
+        /// LWRP sources on this device.
+        /// </summary>
+        public ILWRPSourcesFeature Sources => GetFeature<SourcesFeature>("sources");
+
+        /// <summary>
         /// LWRP destinations on this device.
         /// </summary>
-        public ILWRPDestination[] Destinations
-        {
-            get
-            {
-                ILWRPDestination[] result;
-                lock (mutex)
-                {
-                    //Make sure we have info data
-                    if (!hasInfoData)
-                        throw new InfoDataNotReadyException();
-
-                    //Create array of this size and copy into it
-                    result = new ILWRPDestination[DstNum];
-                    Array.Copy(destinations, result, DstNum);
-                }
-                return result;
-            }
-        }
+        public ILWRPDestinationsFeature Destinations => GetFeature<DestinationsFeature>("destinations");
 
         /// <summary>
         /// LWRP version from device. May be null. Only readable once info data has been received.
@@ -274,9 +260,9 @@ namespace LWRPClient
         /* EVENTS */
 
         public event InfoDataReceivedEventArgs OnInfoDataReceived;
-        public event SrcBatchUpdateEventArgs OnSrcBatchUpdate;
-        public event DstBatchUpdateEventArgs OnDstBatchUpdate;
         public event ConnectionStateUpdateEventArgs OnConnectionStateUpdate;
+        public event GroupProcessingBeginEventArgs OnGroupProcessingBegin;
+        public event GroupProcessingEndEventArgs OnGroupProcessingEnd;
 
         /// <summary>
         /// Starts to connect. Only call this once.
@@ -318,6 +304,55 @@ namespace LWRPClient
         }
 
         /// <summary>
+        /// Subscribes to get events when a specific message type is recieved.
+        /// </summary>
+        /// <param name="name">The name of the message to target.</param>
+        /// <param name="evt">The event to raise.</param>
+        public void SubscribeToMessage(string name, MessageSubscriptionEvent evt)
+        {
+            lock (subscriptions)
+                subscriptions.Add(new MessageSubscription(name, evt));
+        }
+
+        /// <summary>
+        /// Unsubscribes a subscribed event. Returns true if an event was removed.
+        /// </summary>
+        /// <param name="name">The name of the message to target.</param>
+        /// <param name="evt">The event to raise.</param>
+        /// <returns></returns>
+        public bool UnsubscribeFromMessage(string name, MessageSubscriptionEvent evt)
+        {
+            MessageSubscription[] matches;
+            lock (subscriptions)
+            {
+                //Find matching
+                matches = subscriptions.Where(x => x.Name == name.ToUpper() && x.Event == evt).ToArray();
+
+                //Remove all
+                foreach (var s in matches)
+                    subscriptions.Remove(s);
+            }
+            return matches.Length > 0;
+        }
+
+        /// <summary>
+        /// Finds a feature matching the specified type and returns it. If it wasn't found, throws a FeatureNotEnabledException.
+        /// </summary>
+        /// <typeparam name="T"></typeparam>
+        private T GetFeature<T>(string friendlyName)
+        {
+            //Search
+            foreach (var f in features)
+            {
+                if (f is T feature)
+                    return feature;
+            }
+
+            //Not found
+            throw new FeatureNotEnabledException(friendlyName);
+        }
+
+        /// <summary>
         /// Resets state before connecting
         /// </summary>
         private void ResetState()
@@ -325,8 +360,9 @@ namespace LWRPClient
             //Reset state to initializing
             State = LWRPState.CONNECTING;
 
-            //Clear gathered data because we will be fetching it again
-            initInfoRecieved = 0;
+            //Fire event on all features
+            foreach (var f in features)
+                f.ResetState();
         }
 
         /// <summary>
@@ -339,17 +375,9 @@ namespace LWRPClient
             int count;
             lock (mutex)
             {
-                //Loop through all and add any 
-                for (int i = 0; i < infoSrcNum; i++)
-                {
-                    if (sources[i].CreateUpdateMessage(out LWRPMessage msg))
-                        updates.Add(msg);
-                }
-                for (int i = 0; i < infoDstNum; i++)
-                {
-                    if (destinations[i].CreateUpdateMessage(out LWRPMessage msg))
-                        updates.Add(msg);
-                }
+                //Loop through all features to add updates
+                foreach (var f in features)
+                    f.Apply(updates);
 
                 //Save count
                 count = updates.Count;
@@ -400,34 +428,6 @@ namespace LWRPClient
             }
         }
 
-        /// <summary>
-        /// Sets a bit in the init bitfield as we gather initialization data. When we have all parts, this automatically updates state to "ready".
-        /// </summary>
-        private void SetInitDataFlag(InitDataBit bit)
-        {
-            lock (mutex)
-            {
-                //Set bit and see if it changes anything
-                int updated = initInfoRecieved | (1 << (int)bit);
-                if (updated == initInfoRecieved)
-                    return;
-
-                //Update
-                initInfoRecieved = updated;
-
-                //If all are ready, set to ready
-                if (updated == 0b111)
-                {
-                    //Update state
-                    State = LWRPState.READY;
-
-                    //Fire ready task completion, if we haven't yet
-                    if (!readyTask.Task.IsCompleted)
-                        readyTask.SetResult(this);
-                }
-            }
-        }
-
         private void Transport_OnConnected(ILWRPTransport transport)
         {
             //Update state
@@ -459,15 +459,25 @@ namespace LWRPClient
                 case "BEGIN": ProcessBeginGroup(); break;
                 case "END": ProcessEndGroup(); break;
                 case "VER": ProcessVer(message); break;
-                case "SRC": ProcessSrc(message); break;
-                case "DST": ProcessDst(message); break;
             }
+
+            //Dispatch to subscriptions - First find targets
+            MessageSubscription[] targets;
+            lock (subscriptions)
+                targets = subscriptions.Where(x => x.Name == message.Name.ToUpper()).ToArray();
+
+            //Dispatch to subscriptions
+            foreach (var t in targets)
+                t.Event.Invoke(message, isProcessingGroup);
         }
 
         private void ProcessBeginGroup()
         {
             //Set flag
             isProcessingGroup = true;
+
+            //Fire event
+            OnGroupProcessingBegin?.Invoke(this);
         }
 
         private void ProcessEndGroup()
@@ -475,29 +485,8 @@ namespace LWRPClient
             //Clear flag
             isProcessingGroup = false;
 
-            //Check if there are results in sources or destinations for setting initialization flags. We want to set these after we send events though
-            bool hasPendingSrcs = pendingUpdateSources.Count > 0;
-            bool hasPendingDsts = pendingUpdateDestinations.Count > 0;
-
-            //Send batch updates for sources
-            if (pendingUpdateSources.Count > 0)
-            {
-                OnSrcBatchUpdate?.Invoke(this, pendingUpdateSources.ToArray());
-                pendingUpdateSources.Clear();
-            }
-
-            //Send batch updates for destinations
-            if (pendingUpdateDestinations.Count > 0)
-            {
-                OnDstBatchUpdate?.Invoke(this, pendingUpdateDestinations.ToArray());
-                pendingUpdateDestinations.Clear();
-            }
-
-            //Update init flags
-            if (hasPendingDsts)
-                SetInitDataFlag(InitDataBit.DST);
-            if (hasPendingSrcs)
-                SetInitDataFlag(InitDataBit.SRC);
+            //Fire event
+            OnGroupProcessingEnd?.Invoke(this);
         }
 
         private void ProcessVer(LWRPMessage message)
@@ -541,319 +530,38 @@ namespace LWRPClient
                 //Send event
                 OnInfoDataReceived?.Invoke(this);
 
-                //Set init flag
-                SetInitDataFlag(InitDataBit.VER);
+                //Update state
+                State = LWRPState.READY;
 
-                //Send SRC and DST to get info about the sources and destinations
-                transport.SendMessage(new LWRPMessage("SRC", new LWRPToken[0][]));
-                transport.SendMessage(new LWRPMessage("DST", new LWRPToken[0][]));
+                //Fire ready task completion, if we haven't yet
+                if (!readyTask.Task.IsCompleted)
+                    readyTask.SetResult(this);
             }
         }
 
-        private void ProcessSrc(LWRPMessage message)
+        /// <summary>
+        /// Holds a subscription to get events when reciving certain messages.
+        /// </summary>
+        class MessageSubscription
         {
-            //Get the source index (starting at 1)
-            int index = int.Parse(message.Arguments[0][0].Content);
-            LwSrc source = sources[index - 1];
-
-            //Dispatch
-            lock (mutex)
+            public MessageSubscription(string name, MessageSubscriptionEvent evt)
             {
-                //Process update
-                source.ProcessUpdate(message);
-
-                //Add to event list
-                if (!pendingUpdateSources.Contains(source))
-                    pendingUpdateSources.Add(source);
-
-                //If NOT in a group, send a batch update now. Otherwise it'll be sent when we end the group
-                if (!isProcessingGroup)
-                {
-                    OnSrcBatchUpdate?.Invoke(this, pendingUpdateSources.ToArray());
-                    pendingUpdateSources.Clear();
-                    SetInitDataFlag(InitDataBit.SRC);
-                }
-            }
-        }
-
-        private void ProcessDst(LWRPMessage message)
-        {
-            //Get the source index (starting at 1)
-            int index = int.Parse(message.Arguments[0][0].Content);
-            LwDst dst = destinations[index - 1];
-
-            //Dispatch
-            lock (mutex)
-            {
-                //Process update
-                dst.ProcessUpdate(message);
-
-                //Add to event list
-                if (!pendingUpdateDestinations.Contains(dst))
-                    pendingUpdateDestinations.Add(dst);
-
-                //If NOT in a group, send a batch update now. Otherwise it'll be sent when we end the group
-                if (!isProcessingGroup)
-                {
-                    OnDstBatchUpdate?.Invoke(this, pendingUpdateDestinations.ToArray());
-                    pendingUpdateDestinations.Clear();
-                    SetInitDataFlag(InitDataBit.DST);
-                }
-            }
-        }
-
-        /* DATA TYPES */
-
-        private enum InitDataBit
-        {
-            VER = 0,
-            SRC = 1,
-            DST = 2
-        }
-
-        abstract class LwIoItem
-        {
-            public LwIoItem(LWRPConnection conn, int index)
-            {
-                this.conn = conn;
-                this.index = index;
+                this.name = name.ToUpper();
+                this.evt = evt;
             }
 
-            protected readonly LWRPConnection conn;
-            protected readonly int index; //starting at 1
-            protected bool hasInfoData;
+            private readonly string name;
+            private readonly MessageSubscriptionEvent evt;
 
             /// <summary>
-            /// Latest info message describing this item
+            /// The name of the message this is subscribed to
             /// </summary>
-            private LWRPMessage info;
+            public string Name => name;
 
             /// <summary>
-            /// Changes pending to be applied
+            /// The event to raise.
             /// </summary>
-            private Dictionary<string, LWRPToken> pendingChanges = new Dictionary<string, LWRPToken>();
-
-            /// <summary>
-            /// Index, starting at 1.
-            /// </summary>
-            public int Index => index;
-
-            /// <summary>
-            /// The name of the command used to apply changes
-            /// </summary>
-            protected abstract string MessageName { get; }
-
-            public void ProcessUpdate(LWRPMessage message)
-            {
-                info = message;
-                hasInfoData = true;
-            }
-
-            protected bool TryReadProperty(string key, out LWRPToken token)
-            {
-                //If no data yet, reject
-                if (!hasInfoData)
-                    throw new InfoDataNotReadyException();
-
-                //Search for it in pending changes first
-                /*if (pendingChanges.TryGetValue(key, out token))
-                    return true;*/
-
-                //Next find it in the info
-                if (info.TryGetNamedArgument(key, out token))
-                    return true;
-
-                return false;
-            }
-
-            protected bool TryReadProperty(string key, out string token)
-            {
-                if (TryReadProperty(key, out LWRPToken raw))
-                {
-                    token = raw.Content;
-                    return true;
-                }
-                token = null;
-                return false;
-            }
-
-            protected string ReadPropertyString(string key, string defaultValue = null)
-            {
-                if (TryReadProperty(key, out string token))
-                    return token;
-                return defaultValue;
-            }
-
-            protected bool TryReadProperty(string key, out int token)
-            {
-                if (TryReadProperty(key, out LWRPToken raw))
-                {
-                    token = int.Parse(raw.Content);
-                    return true;
-                }
-                token = 0;
-                return false;
-            }
-
-            protected int ReadPropertyInt(string key, int defaultValue = 0)
-            {
-                if (TryReadProperty(key, out int token))
-                    return token;
-                return defaultValue;
-            }
-
-            protected bool TryReadProperty(string key, out bool token)
-            {
-                if (TryReadProperty(key, out int raw))
-                {
-                    if (raw == 0)
-                        token = false;
-                    else if (raw == 1)
-                        token = true;
-                    else
-                        throw new Exception("Invalid boolean value.");
-                    return true;
-                }
-                token = false;
-                return false;
-            }
-
-            protected bool ReadPropertyBool(string key, bool defaultValue = false)
-            {
-                if (TryReadProperty(key, out bool token))
-                    return token;
-                return defaultValue;
-            }
-
-            protected void SetProperty(string key, LWRPToken token)
-            {
-                lock (pendingChanges)
-                {
-                    if (pendingChanges.ContainsKey(key))
-                        pendingChanges[key] = token;
-                    else
-                        pendingChanges.Add(key, token);
-                }
-            }
-
-            /// <summary>
-            /// Encapsulates updates pending into a message and clears them pending. Returns if it was successful.
-            /// </summary>
-            /// <returns></returns>
-            public bool CreateUpdateMessage(out LWRPMessage msg)
-            {
-                lock (pendingChanges)
-                {
-                    //If no updates, return null
-                    if (pendingChanges.Count == 0)
-                    {
-                        msg = null;
-                        return false;
-                    }
-
-                    //Create the arguments
-                    LWRPToken[][] tokens = new LWRPToken[pendingChanges.Count + 1][];
-
-                    //The first token is the index
-                    tokens[0] = new LWRPToken[] { new LWRPToken(false, index.ToString()) };
-
-                    //Add each of the arguments
-                    int i = 1;
-                    foreach (var c in pendingChanges)
-                        tokens[i++] = new LWRPToken[] { new LWRPToken(false, c.Key), c.Value };
-
-                    //Clear pending changes
-                    pendingChanges.Clear();
-
-                    msg = new LWRPMessage(MessageName, tokens);
-                    return true;
-                }
-            }
-        }
-        
-        class LwSrc : LwIoItem, ILWRPSource
-        {
-            public LwSrc(LWRPConnection conn, int index) : base(conn, index)
-            {
-                
-            }
-
-            protected override string MessageName => "SRC";
-
-            public string PrimarySourceName
-            {
-                get => ReadPropertyString("PSNM");
-                set => SetProperty("PSNM", new LWRPToken(true, value));
-            }
-
-            public bool RtpStreamEnabled
-            {
-                get => ReadPropertyBool("RTPE");
-                set => SetProperty("RTPE", new LWRPToken(false, value ? "1" : "0"));
-            }
-
-            public string RtpStreamAddress
-            {
-                get => ReadPropertyString("RTPA");
-                set => SetProperty("RTPA", new LWRPToken(true, value));
-            }
-
-            public int ChannelCount
-            {
-                get => ReadPropertyInt("NCHN", 2);
-                set => SetProperty("NCHN", new LWRPToken(false, value.ToString()));
-            }
-
-            public int Gain
-            {
-                get => ReadPropertyInt("INGN");
-                set => SetProperty("INGN", new LWRPToken(false, value.ToString()));
-            }
-
-            public string LcdLabel
-            {
-                get => ReadPropertyString("LABL");
-                set => SetProperty("LABL", new LWRPToken(true, value));
-            }
-        }
-
-        class LwDst : LwIoItem, ILWRPDestination
-        {
-            public LwDst(LWRPConnection conn, int index) : base(conn, index)
-            {
-            }
-
-            protected override string MessageName => "DST";
-
-            public string Name
-            {
-                get => ReadPropertyString("NAME");
-                set => SetProperty("NAME", new LWRPToken(true, value));
-            }
-
-            public string Address
-            {
-                get => ReadPropertyString("ADDR");
-                set => SetProperty("ADDR", new LWRPToken(true, value));
-            }
-
-            public int ChannelCount
-            {
-                get => ReadPropertyInt("NCHN", 2);
-                set => SetProperty("NCHN", new LWRPToken(false, value.ToString()));
-            }
-
-            public LwChannel Channel
-            {
-                get => LwChannel.FromIpAddress(Address);
-                set
-                {
-                    if (value == null || value.Type == LwChannelType.INVALID)
-                        Address = "";
-                    else
-                        Address = value.ToIpAddress().ToString();
-                }
-            }
+            public MessageSubscriptionEvent Event => evt;
         }
     }
 }

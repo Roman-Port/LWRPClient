@@ -13,7 +13,7 @@ namespace LWRPClient.Example.OneShot
 
         static async Task SetAsync(IPAddress addr, TimeSpan timeout)
         {
-            using (LWRPConnection conn = new LWRPConnection(addr))
+            using (LWRPConnection conn = new LWRPConnection(addr, LWRPEnabledFeature.SOURCES | LWRPEnabledFeature.DESTINATIONS))
             {
                 //Initialize
                 conn.Initialize();

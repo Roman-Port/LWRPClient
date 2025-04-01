@@ -43,10 +43,10 @@ namespace LWRPClient.Console
                 transport.OnMessageReceived += Conn_OnMessageReceived;
 
                 //Create connection
-                conn = new LWRPConnection(transport);
+                conn = new LWRPConnection(transport, LWRPEnabledFeature.SOURCES | LWRPEnabledFeature.DESTINATIONS);
                 conn.OnInfoDataReceived += Conn_OnInfoDataReceived;
-                conn.OnSrcBatchUpdate += Conn_OnSrcBatchUpdate;
-                conn.OnDstBatchUpdate += Conn_OnDstBatchUpdate;
+                conn.Sources.OnBatchUpdate += Conn_OnSrcBatchUpdate;
+                conn.Destinations.OnBatchUpdate += Conn_OnDstBatchUpdate;
                 conn.OnConnectionStateUpdate += Conn_OnConnectionStateUpdate;
                 conn.Initialize();
 

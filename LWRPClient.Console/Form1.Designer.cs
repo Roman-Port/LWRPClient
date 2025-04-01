@@ -49,16 +49,19 @@
             this.label14 = new System.Windows.Forms.Label();
             this.label15 = new System.Windows.Forms.Label();
             this.label16 = new System.Windows.Forms.Label();
-            this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.sourcesPanel = new System.Windows.Forms.Panel();
             this.btnApply = new System.Windows.Forms.Button();
-            this.groupBox3 = new System.Windows.Forms.GroupBox();
             this.dstPanel = new System.Windows.Forms.Panel();
             this.statusLabel = new System.Windows.Forms.Label();
+            this.tabControl = new System.Windows.Forms.TabControl();
+            this.sourcesTab = new System.Windows.Forms.TabPage();
+            this.destinationsTab = new System.Windows.Forms.TabPage();
+            this.gpioTab = new System.Windows.Forms.TabPage();
             this.groupBox1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
-            this.groupBox2.SuspendLayout();
-            this.groupBox3.SuspendLayout();
+            this.tabControl.SuspendLayout();
+            this.sourcesTab.SuspendLayout();
+            this.destinationsTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -282,27 +285,13 @@
             this.label16.TabIndex = 18;
             this.label16.Text = "Device Ver";
             // 
-            // groupBox2
-            // 
-            this.groupBox2.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox2.Controls.Add(this.sourcesPanel);
-            this.groupBox2.Location = new System.Drawing.Point(12, 124);
-            this.groupBox2.Name = "groupBox2";
-            this.groupBox2.Size = new System.Drawing.Size(529, 181);
-            this.groupBox2.TabIndex = 3;
-            this.groupBox2.TabStop = false;
-            this.groupBox2.Text = "Sources";
-            // 
             // sourcesPanel
             // 
-            this.sourcesPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.sourcesPanel.AutoScroll = true;
-            this.sourcesPanel.Location = new System.Drawing.Point(6, 19);
+            this.sourcesPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.sourcesPanel.Location = new System.Drawing.Point(3, 3);
             this.sourcesPanel.Name = "sourcesPanel";
-            this.sourcesPanel.Size = new System.Drawing.Size(517, 156);
+            this.sourcesPanel.Size = new System.Drawing.Size(515, 368);
             this.sourcesPanel.TabIndex = 0;
             // 
             // btnApply
@@ -317,27 +306,13 @@
             this.btnApply.UseVisualStyleBackColor = true;
             this.btnApply.Click += new System.EventHandler(this.btnApply_Click);
             // 
-            // groupBox3
-            // 
-            this.groupBox3.Anchor = ((System.Windows.Forms.AnchorStyles)(((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
-            this.groupBox3.Controls.Add(this.dstPanel);
-            this.groupBox3.Location = new System.Drawing.Point(12, 311);
-            this.groupBox3.Name = "groupBox3";
-            this.groupBox3.Size = new System.Drawing.Size(529, 181);
-            this.groupBox3.TabIndex = 4;
-            this.groupBox3.TabStop = false;
-            this.groupBox3.Text = "Destinations";
-            // 
             // dstPanel
             // 
-            this.dstPanel.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
-            | System.Windows.Forms.AnchorStyles.Left) 
-            | System.Windows.Forms.AnchorStyles.Right)));
             this.dstPanel.AutoScroll = true;
-            this.dstPanel.Location = new System.Drawing.Point(6, 19);
+            this.dstPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.dstPanel.Location = new System.Drawing.Point(3, 3);
             this.dstPanel.Name = "dstPanel";
-            this.dstPanel.Size = new System.Drawing.Size(517, 156);
+            this.dstPanel.Size = new System.Drawing.Size(515, 368);
             this.dstPanel.TabIndex = 0;
             // 
             // statusLabel
@@ -350,15 +325,59 @@
             this.statusLabel.Text = "DISCONNECTED";
             this.statusLabel.TextAlign = System.Drawing.ContentAlignment.MiddleCenter;
             // 
+            // tabControl
+            // 
+            this.tabControl.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.tabControl.Controls.Add(this.sourcesTab);
+            this.tabControl.Controls.Add(this.destinationsTab);
+            this.tabControl.Controls.Add(this.gpioTab);
+            this.tabControl.Location = new System.Drawing.Point(12, 124);
+            this.tabControl.Name = "tabControl";
+            this.tabControl.SelectedIndex = 0;
+            this.tabControl.Size = new System.Drawing.Size(529, 400);
+            this.tabControl.TabIndex = 6;
+            // 
+            // sourcesTab
+            // 
+            this.sourcesTab.Controls.Add(this.sourcesPanel);
+            this.sourcesTab.Location = new System.Drawing.Point(4, 22);
+            this.sourcesTab.Name = "sourcesTab";
+            this.sourcesTab.Padding = new System.Windows.Forms.Padding(3);
+            this.sourcesTab.Size = new System.Drawing.Size(521, 374);
+            this.sourcesTab.TabIndex = 0;
+            this.sourcesTab.Text = "Sources";
+            this.sourcesTab.UseVisualStyleBackColor = true;
+            // 
+            // destinationsTab
+            // 
+            this.destinationsTab.Controls.Add(this.dstPanel);
+            this.destinationsTab.Location = new System.Drawing.Point(4, 22);
+            this.destinationsTab.Name = "destinationsTab";
+            this.destinationsTab.Padding = new System.Windows.Forms.Padding(3);
+            this.destinationsTab.Size = new System.Drawing.Size(521, 374);
+            this.destinationsTab.TabIndex = 1;
+            this.destinationsTab.Text = "Destinations";
+            this.destinationsTab.UseVisualStyleBackColor = true;
+            // 
+            // gpioTab
+            // 
+            this.gpioTab.Location = new System.Drawing.Point(4, 22);
+            this.gpioTab.Name = "gpioTab";
+            this.gpioTab.Size = new System.Drawing.Size(192, 74);
+            this.gpioTab.TabIndex = 2;
+            this.gpioTab.Text = "GPIO";
+            this.gpioTab.UseVisualStyleBackColor = true;
+            // 
             // Form1
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
             this.ClientSize = new System.Drawing.Size(553, 565);
+            this.Controls.Add(this.tabControl);
             this.Controls.Add(this.statusLabel);
-            this.Controls.Add(this.groupBox3);
             this.Controls.Add(this.btnApply);
-            this.Controls.Add(this.groupBox2);
             this.Controls.Add(this.groupBox1);
             this.Controls.Add(this.ipBox);
             this.Controls.Add(this.btnConnect);
@@ -368,8 +387,9 @@
             this.groupBox1.ResumeLayout(false);
             this.tableLayoutPanel1.ResumeLayout(false);
             this.tableLayoutPanel1.PerformLayout();
-            this.groupBox2.ResumeLayout(false);
-            this.groupBox3.ResumeLayout(false);
+            this.tabControl.ResumeLayout(false);
+            this.sourcesTab.ResumeLayout(false);
+            this.destinationsTab.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -398,12 +418,14 @@
         private System.Windows.Forms.Label label14;
         private System.Windows.Forms.Label label15;
         private System.Windows.Forms.Label label16;
-        private System.Windows.Forms.GroupBox groupBox2;
         private System.Windows.Forms.Panel sourcesPanel;
         private System.Windows.Forms.Button btnApply;
-        private System.Windows.Forms.GroupBox groupBox3;
         private System.Windows.Forms.Panel dstPanel;
         private System.Windows.Forms.Label statusLabel;
+        private System.Windows.Forms.TabControl tabControl;
+        private System.Windows.Forms.TabPage sourcesTab;
+        private System.Windows.Forms.TabPage destinationsTab;
+        private System.Windows.Forms.TabPage gpioTab;
     }
 }
 
