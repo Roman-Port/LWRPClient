@@ -6,7 +6,7 @@ using System.Text;
 
 namespace LWRPClient.Core.GPIO
 {
-    class GpiFeature : BatchUpdateFeature<ILWRPGpiPort>, ILWRPGpiFeature
+    class GpiFeature : BaseGpioFeature<ILWRPGpiPort>, ILWRPGpiFeature
     {
         public GpiFeature(LWRPConnection connection) : base(connection)
         {
@@ -47,28 +47,8 @@ namespace LWRPClient.Core.GPIO
             //Get the pin states
             char[] pinsRaw = message.Arguments[1][0].Content.ToCharArray();
 
-            //Validate
-            if (pinsRaw.Length != 5)
-                throw new Exception($"Server sent invalid data: Expected 5 GPI pins, got {pinsRaw.Length} instead!");
-
-            //Decode pin states
-            LWRPPinState[] pins = new LWRPPinState[5];
-            for (int i = 0; i < 5; i++)
-            {
-                LWRPPinState state;
-                switch (pinsRaw[i])
-                {
-                    case 'L': state = LWRPPinState.FALLING; break;
-                    case 'l': state = LWRPPinState.LOW; break;
-                    case 'h': state = LWRPPinState.HIGH; break;
-                    case 'H': state = LWRPPinState.RISING; break;
-                    default: throw new Exception($"Server sent invalid data: '{pinsRaw[i]}' is not a valid pin state for pin #{i + 1}.");
-                }
-                pins[i] = state;
-            }
-
             //Apply to port
-            port.StateUpdateRecieved(pins);
+            port.StateUpdateRecieved(pinsRaw);
 
             //Enqueue for batch update
             EnqueueReceivedUpdate(port, inGroup);
@@ -76,32 +56,54 @@ namespace LWRPClient.Core.GPIO
 
         internal override void Apply(IList<LWRPMessage> updates)
         {
-            throw new NotImplementedException();
+            //Do nothing...these are read-only.
         }
 
-        class GpiPort : ILWRPGpiPort
+        class GpiPort : BaseGpioPort, ILWRPGpiPort
         {
-            public GpiPort(LWRPConnection connection, int index)
+            public GpiPort(LWRPConnection connection, int index) : base(connection, index)
             {
-                this.connection = connection;
-                this.index = index;
+                //Create adapter
+                adapter = new PinAdapter(this);
             }
 
-            private readonly LWRPConnection connection;
-            private readonly int index; // starting from 1
-            private readonly LWRPPinState[] pins = new LWRPPinState[5];
+            private readonly PinAdapter adapter;
 
-            public int Index => index;
-
-            public LWRPPinState[] Pins => pins;
+            public override ILWRPPins Pins => adapter;
 
             /// <summary>
-            /// Fired when the state of the pins is updated from the server.
+            /// Adapter that provides access to the port.
             /// </summary>
-            public void StateUpdateRecieved(LWRPPinState[] newState)
+            class PinAdapter : ILWRPPins
             {
-                //Copy
-                Array.Copy(newState, pins, 5);
+                public PinAdapter(GpiPort port)
+                {
+                    this.port = port;
+                }
+
+                private readonly GpiPort port;
+
+                public LWRPPinState this[int index]
+                {
+                    get
+                    {
+                        LWRPPinState state;
+                        lock (port.pins)
+                            state = port.pins[index];
+                        return state;
+                    }
+                    set => throw new NotSupportedException();
+                }
+
+                public bool ReadOnly => true;
+
+                public LWRPPinState[] ToArray()
+                {
+                    LWRPPinState[] result = new LWRPPinState[5];
+                    lock (port.pins)
+                        port.pins.CopyTo(result, 0);
+                    return result;
+                }
             }
         }
     }

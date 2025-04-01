@@ -14,6 +14,6 @@ namespace LWRPClient
         /// <summary>
         /// The pins on this port.
         /// </summary>
-        LWRPPinState[] Pins { get; }
+        ILWRPPins Pins { get; }
     }
 }

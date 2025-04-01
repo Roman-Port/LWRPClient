@@ -202,6 +202,11 @@ namespace LWRPClient.Console.Controls
             }
 
             public bool ReadOnly => control.readOnly;
+
+            public LWRPPinState[] ToArray()
+            {
+                throw new NotImplementedException();
+            }
         }
     }
 }

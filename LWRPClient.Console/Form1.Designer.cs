@@ -56,14 +56,15 @@
             this.tabControl = new System.Windows.Forms.TabControl();
             this.sourcesTab = new System.Windows.Forms.TabPage();
             this.destinationsTab = new System.Windows.Forms.TabPage();
-            this.gpioTab = new System.Windows.Forms.TabPage();
+            this.gpiTab = new System.Windows.Forms.TabPage();
             this.gpiPanel = new System.Windows.Forms.Panel();
+            this.gpoTab = new System.Windows.Forms.TabPage();
             this.groupBox1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.tabControl.SuspendLayout();
             this.sourcesTab.SuspendLayout();
             this.destinationsTab.SuspendLayout();
-            this.gpioTab.SuspendLayout();
+            this.gpiTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -334,7 +335,8 @@
             | System.Windows.Forms.AnchorStyles.Right)));
             this.tabControl.Controls.Add(this.sourcesTab);
             this.tabControl.Controls.Add(this.destinationsTab);
-            this.tabControl.Controls.Add(this.gpioTab);
+            this.tabControl.Controls.Add(this.gpiTab);
+            this.tabControl.Controls.Add(this.gpoTab);
             this.tabControl.Location = new System.Drawing.Point(12, 124);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
@@ -363,15 +365,15 @@
             this.destinationsTab.Text = "Destinations";
             this.destinationsTab.UseVisualStyleBackColor = true;
             // 
-            // gpioTab
+            // gpiTab
             // 
-            this.gpioTab.Controls.Add(this.gpiPanel);
-            this.gpioTab.Location = new System.Drawing.Point(4, 22);
-            this.gpioTab.Name = "gpioTab";
-            this.gpioTab.Size = new System.Drawing.Size(521, 374);
-            this.gpioTab.TabIndex = 2;
-            this.gpioTab.Text = "GPIO";
-            this.gpioTab.UseVisualStyleBackColor = true;
+            this.gpiTab.Controls.Add(this.gpiPanel);
+            this.gpiTab.Location = new System.Drawing.Point(4, 22);
+            this.gpiTab.Name = "gpiTab";
+            this.gpiTab.Size = new System.Drawing.Size(521, 374);
+            this.gpiTab.TabIndex = 2;
+            this.gpiTab.Text = "GPI";
+            this.gpiTab.UseVisualStyleBackColor = true;
             // 
             // gpiPanel
             // 
@@ -381,6 +383,15 @@
             this.gpiPanel.Name = "gpiPanel";
             this.gpiPanel.Size = new System.Drawing.Size(521, 374);
             this.gpiPanel.TabIndex = 0;
+            // 
+            // gpoTab
+            // 
+            this.gpoTab.Location = new System.Drawing.Point(4, 22);
+            this.gpoTab.Name = "gpoTab";
+            this.gpoTab.Size = new System.Drawing.Size(521, 374);
+            this.gpoTab.TabIndex = 3;
+            this.gpoTab.Text = "GPO";
+            this.gpoTab.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -402,7 +413,7 @@
             this.tabControl.ResumeLayout(false);
             this.sourcesTab.ResumeLayout(false);
             this.destinationsTab.ResumeLayout(false);
-            this.gpioTab.ResumeLayout(false);
+            this.gpiTab.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -438,8 +449,9 @@
         private System.Windows.Forms.TabControl tabControl;
         private System.Windows.Forms.TabPage sourcesTab;
         private System.Windows.Forms.TabPage destinationsTab;
-        private System.Windows.Forms.TabPage gpioTab;
+        private System.Windows.Forms.TabPage gpiTab;
         private System.Windows.Forms.Panel gpiPanel;
+        private System.Windows.Forms.TabPage gpoTab;
     }
 }
 

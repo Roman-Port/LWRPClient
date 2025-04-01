@@ -191,7 +191,7 @@ namespace LWRPClient.Console
                     }
 
                     //Update
-                    ctrl.SetPins(s.Pins);
+                    ctrl.SetPins(s.Pins.ToArray());
                 }
             });
         }
