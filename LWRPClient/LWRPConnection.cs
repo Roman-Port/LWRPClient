@@ -12,6 +12,7 @@ using LWRPClient.Core;
 using LWRPClient.Features;
 using LWRPClient.Core.Sources;
 using LWRPClient.Core.Destinations;
+using LWRPClient.Core.GPIO;
 
 namespace LWRPClient
 {
@@ -38,6 +39,8 @@ namespace LWRPClient
                 features.Add(new SourcesFeature(this));
             if ((enabledFeatures & LWRPEnabledFeature.DESTINATIONS) == LWRPEnabledFeature.DESTINATIONS)
                 features.Add(new DestinationsFeature(this));
+            if ((enabledFeatures & LWRPEnabledFeature.GPI) == LWRPEnabledFeature.GPI)
+                features.Add(new GpiFeature(this));
 
             //Misc
             readyTask = new TaskCompletionSource<LWRPConnection>();
@@ -152,6 +155,11 @@ namespace LWRPClient
         /// LWRP destinations on this device.
         /// </summary>
         public ILWRPDestinationsFeature Destinations => GetFeature<DestinationsFeature>("destinations");
+
+        /// <summary>
+        /// LWRP GPIs (to network) on this device.
+        /// </summary>
+        public ILWRPGpiFeature GPIs => GetFeature<GpiFeature>("GPIs");
 
         /// <summary>
         /// LWRP version from device. May be null. Only readable once info data has been received.

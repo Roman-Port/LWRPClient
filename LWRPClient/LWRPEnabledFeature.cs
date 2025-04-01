@@ -19,5 +19,10 @@ namespace LWRPClient
         /// Destinations.
         /// </summary>
         DESTINATIONS = (1 << 1),
+
+        /// <summary>
+        /// GPI (to network)
+        /// </summary>
+        GPI = (1 << 2),
     }
 }

@@ -57,11 +57,13 @@
             this.sourcesTab = new System.Windows.Forms.TabPage();
             this.destinationsTab = new System.Windows.Forms.TabPage();
             this.gpioTab = new System.Windows.Forms.TabPage();
+            this.gpiPanel = new System.Windows.Forms.Panel();
             this.groupBox1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.tabControl.SuspendLayout();
             this.sourcesTab.SuspendLayout();
             this.destinationsTab.SuspendLayout();
+            this.gpioTab.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -363,12 +365,22 @@
             // 
             // gpioTab
             // 
+            this.gpioTab.Controls.Add(this.gpiPanel);
             this.gpioTab.Location = new System.Drawing.Point(4, 22);
             this.gpioTab.Name = "gpioTab";
-            this.gpioTab.Size = new System.Drawing.Size(192, 74);
+            this.gpioTab.Size = new System.Drawing.Size(521, 374);
             this.gpioTab.TabIndex = 2;
             this.gpioTab.Text = "GPIO";
             this.gpioTab.UseVisualStyleBackColor = true;
+            // 
+            // gpiPanel
+            // 
+            this.gpiPanel.AutoScroll = true;
+            this.gpiPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gpiPanel.Location = new System.Drawing.Point(0, 0);
+            this.gpiPanel.Name = "gpiPanel";
+            this.gpiPanel.Size = new System.Drawing.Size(521, 374);
+            this.gpiPanel.TabIndex = 0;
             // 
             // Form1
             // 
@@ -390,6 +402,7 @@
             this.tabControl.ResumeLayout(false);
             this.sourcesTab.ResumeLayout(false);
             this.destinationsTab.ResumeLayout(false);
+            this.gpioTab.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -426,6 +439,7 @@
         private System.Windows.Forms.TabPage sourcesTab;
         private System.Windows.Forms.TabPage destinationsTab;
         private System.Windows.Forms.TabPage gpioTab;
+        private System.Windows.Forms.Panel gpiPanel;
     }
 }
 

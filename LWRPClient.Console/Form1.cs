@@ -43,10 +43,11 @@ namespace LWRPClient.Console
                 transport.OnMessageReceived += Conn_OnMessageReceived;
 
                 //Create connection
-                conn = new LWRPConnection(transport, LWRPEnabledFeature.SOURCES | LWRPEnabledFeature.DESTINATIONS);
+                conn = new LWRPConnection(transport, LWRPEnabledFeature.SOURCES | LWRPEnabledFeature.DESTINATIONS | LWRPEnabledFeature.GPI);
                 conn.OnInfoDataReceived += Conn_OnInfoDataReceived;
                 conn.Sources.OnBatchUpdate += Conn_OnSrcBatchUpdate;
                 conn.Destinations.OnBatchUpdate += Conn_OnDstBatchUpdate;
+                conn.GPIs.OnBatchUpdate += GPIs_OnBatchUpdate;
                 conn.OnConnectionStateUpdate += Conn_OnConnectionStateUpdate;
                 conn.Initialize();
 
@@ -152,6 +153,45 @@ namespace LWRPClient.Console
 
                     //Update
                     ctrl.SourceUpdated();
+                }
+            });
+        }
+
+        private void GPIs_OnBatchUpdate(LWRPConnection conn, ILWRPGpiPort[] updates)
+        {
+            Invoke((MethodInvoker)delegate
+            {
+                foreach (var s in updates)
+                {
+                    //Find the source control belonging to this, if it exists
+                    LwGpiControl ctrl = null;
+                    foreach (var c in gpiPanel.Controls)
+                    {
+                        if (c is LwGpiControl cs && cs.Index == s.Index)
+                        {
+                            ctrl = cs;
+                        }
+                    }
+
+                    //If not found, create it
+                    if (ctrl == null)
+                    {
+                        //Create
+                        ctrl = new LwGpiControl(s.Index)
+                        {
+                            Dock = DockStyle.Top,
+                            ReadOnly = true
+                        };
+
+                        //Insert
+                        gpiPanel.Controls.Add(ctrl);
+
+                        //Sort
+                        gpiPanel.Controls.SetChildIndex(ctrl, 0);
+                    }
+
+                    //Update
+                    ctrl.SetPins(s.Pins);
                 }
             });
         }
