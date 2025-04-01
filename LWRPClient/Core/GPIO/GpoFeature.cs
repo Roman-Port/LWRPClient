@@ -20,7 +20,7 @@ namespace LWRPClient.Core.GPIO
 
             //Bind to events
             connection.OnInfoDataReceived += Connection_OnInfoDataReceived;
-            connection.SubscribeToMessage("GPO", OnUpdateMessageReceived);
+            connection.SubscribeToMessage("GPO", OnStateUpdateMessageReceived);
         }
 
         private readonly GpoPort[] ports = new GpoPort[256];
@@ -31,19 +31,9 @@ namespace LWRPClient.Core.GPIO
         protected override int CountUnchecked => connection.GpoNum;
 
         /// <summary>
-        /// Gets a GPO port from an index.
+        /// Gets the array of ports from the user.
         /// </summary>
-        public ILWRPGpoPort this[int index]
-        {
-            get
-            {
-                //Make sure the index is valid. This also ensures info data is ready
-                if (index < 0 || index >= Count)
-                    throw new IndexOutOfRangeException();
-
-                return ports[index];
-            }
-        }
+        protected override BaseGpioPort[] PortsImpl => ports;
 
         private void Connection_OnInfoDataReceived(LWRPConnection conn)
         {
@@ -61,22 +51,6 @@ namespace LWRPClient.Core.GPIO
                 //Mark as ready immediately
                 MarkAsReady();
             }
-        }
-
-        private void OnUpdateMessageReceived(LWRPMessage message, bool inGroup)
-        {
-            //Get the GPO index (starting at 1)
-            int index = int.Parse(message.Arguments[0][0].Content);
-            GpoPort port = ports[index - 1];
-
-            //Get the pin states
-            char[] pinsRaw = message.Arguments[1][0].Content.ToCharArray();
-
-            //Apply to port
-            port.StateUpdateRecieved(pinsRaw);
-
-            //Enqueue for batch update
-            EnqueueReceivedUpdate(port, inGroup);
         }
 
         internal override void Apply(IList<LWRPMessage> updates)

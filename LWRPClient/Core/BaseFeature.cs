@@ -33,12 +33,21 @@ namespace LWRPClient.Core
         }
 
         /// <summary>
+        /// Perform checks when MarkAsReady is called to make sure the system is fully ready.
+        /// </summary>
+        /// <returns></returns>
+        protected virtual bool IsReady()
+        {
+            return true;
+        }
+
+        /// <summary>
         /// Sets this feature to be ready and fires the ready task.
         /// </summary>
         protected void MarkAsReady()
         {
             //Fire ready task completion, if we haven't yet
-            if (!readyTask.Task.IsCompleted)
+            if (!readyTask.Task.IsCompleted && IsReady())
                 readyTask.SetResult(true);
         }
 

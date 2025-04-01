@@ -46,10 +46,15 @@ namespace LWRPClient.Console
                 conn = new LWRPConnection(transport, LWRPEnabledFeature.SOURCES | LWRPEnabledFeature.DESTINATIONS | LWRPEnabledFeature.GPI | LWRPEnabledFeature.GPO);
                 conn.OnInfoDataReceived += Conn_OnInfoDataReceived;
                 conn.Sources.OnBatchUpdate += Conn_OnSrcBatchUpdate;
+                BindTabReady(conn.Sources.WaitForReadyAsync(), sourcesTab);
                 conn.Destinations.OnBatchUpdate += Conn_OnDstBatchUpdate;
+                BindTabReady(conn.Destinations.WaitForReadyAsync(), destinationsTab);
                 conn.GPIs.OnBatchUpdate += GPIs_OnBatchUpdate;
+                BindTabReady(conn.GPIs.WaitForReadyAsync(), gpiTab);
                 conn.GPOs.OnBatchUpdate += GPOs_OnBatchUpdate;
+                BindTabReady(conn.GPOs.WaitForReadyAsync(), gpoTab);
                 conn.OnConnectionStateUpdate += Conn_OnConnectionStateUpdate;
+                
                 conn.Initialize();
 
                 //Set button text
@@ -285,6 +290,22 @@ namespace LWRPClient.Console
             });
         }
 
+        /// <summary>
+        /// Utility function that will display a tab as ready when a task completes.
+        /// </summary>
+        /// <param name="task"></param>
+        /// <param name="page"></param>
+        private void BindTabReady(Task task, TabPage page)
+        {
+            task.ContinueWith((Task t) =>
+            {
+                Invoke((MethodInvoker)delegate
+                {
+                    page.Text += "*";
+                });
+            });
+        }
+
         private void Form1_Load(object sender, EventArgs e)
         {
             //Attempt to load last filename from disk
@@ -332,6 +353,12 @@ namespace LWRPClient.Console
             //Clear sources and destinations
             sourcesPanel.Controls.Clear();
             dstPanel.Controls.Clear();
+            gpiPanel.Controls.Clear();
+            gpoPanel.Controls.Clear();
+
+            //Reset readiness marks
+            foreach (var t in tabControl.TabPages)
+                ((TabPage)t).Text = ((TabPage)t).Text.TrimEnd('*');
         }
     }
 }
