@@ -6,7 +6,10 @@ using System.Text;
 
 namespace LWRPClient.Core
 {
-    abstract class LwIoItem
+    /// <summary>
+    /// A LwPropertyItem abstracted away to specific messages.
+    /// </summary>
+    abstract class LwIoItem : LwPropertyItem
     {
         public LwIoItem(LWRPConnection conn, int index)
         {
@@ -16,17 +19,6 @@ namespace LWRPClient.Core
 
         protected readonly LWRPConnection conn;
         protected readonly int index; //starting at 1
-        protected bool hasInfoData;
-
-        /// <summary>
-        /// Latest info message describing this item
-        /// </summary>
-        private LWRPMessage info;
-
-        /// <summary>
-        /// Changes pending to be applied
-        /// </summary>
-        private Dictionary<string, LWRPToken> pendingChanges = new Dictionary<string, LWRPToken>();
 
         /// <summary>
         /// Index, starting at 1.
@@ -38,97 +30,14 @@ namespace LWRPClient.Core
         /// </summary>
         protected abstract string MessageName { get; }
 
+        /// <summary>
+        /// Processes an update from the server.
+        /// </summary>
+        /// <param name="message"></param>
         public void ProcessUpdate(LWRPMessage message)
         {
-            info = message;
-            hasInfoData = true;
-        }
-
-        protected bool TryReadProperty(string key, out LWRPToken token)
-        {
-            //If no data yet, reject
-            if (!hasInfoData)
-                throw new InfoDataNotReadyException();
-
-            //Search for it in pending changes first
-            /*if (pendingChanges.TryGetValue(key, out token))
-                return true;*/
-
-            //Next find it in the info
-            if (info.TryGetNamedArgument(key, out token))
-                return true;
-
-            return false;
-        }
-
-        protected bool TryReadProperty(string key, out string token)
-        {
-            if (TryReadProperty(key, out LWRPToken raw))
-            {
-                token = raw.Content;
-                return true;
-            }
-            token = null;
-            return false;
-        }
-
-        protected string ReadPropertyString(string key, string defaultValue = null)
-        {
-            if (TryReadProperty(key, out string token))
-                return token;
-            return defaultValue;
-        }
-
-        protected bool TryReadProperty(string key, out int token)
-        {
-            if (TryReadProperty(key, out LWRPToken raw))
-            {
-                token = int.Parse(raw.Content);
-                return true;
-            }
-            token = 0;
-            return false;
-        }
-
-        protected int ReadPropertyInt(string key, int defaultValue = 0)
-        {
-            if (TryReadProperty(key, out int token))
-                return token;
-            return defaultValue;
-        }
-
-        protected bool TryReadProperty(string key, out bool token)
-        {
-            if (TryReadProperty(key, out int raw))
-            {
-                if (raw == 0)
-                    token = false;
-                else if (raw == 1)
-                    token = true;
-                else
-                    throw new Exception("Invalid boolean value.");
-                return true;
-            }
-            token = false;
-            return false;
-        }
-
-        protected bool ReadPropertyBool(string key, bool defaultValue = false)
-        {
-            if (TryReadProperty(key, out bool token))
-                return token;
-            return defaultValue;
-        }
-
-        protected void SetProperty(string key, LWRPToken token)
-        {
-            lock (pendingChanges)
-            {
-                if (pendingChanges.ContainsKey(key))
-                    pendingChanges[key] = token;
-                else
-                    pendingChanges.Add(key, token);
-            }
+            //Ingest messages, skipping the index.
+            ProcessServerPropertyUpdate(message.Arguments, 1, message.Arguments.Length - 1);
         }
 
         /// <summary>
@@ -137,32 +46,21 @@ namespace LWRPClient.Core
         /// <returns></returns>
         public bool CreateUpdateMessage(out LWRPMessage msg)
         {
-            lock (pendingChanges)
+            //Start building...the first token is the index
+            List<LWRPToken[]> tokens = new List<LWRPToken[]>();
+            tokens.Add(new LWRPToken[] { new LWRPToken(false, index.ToString()) });
+
+            //Add arguments
+            if (!CreateUpdateMessageProperties(tokens))
             {
-                //If no updates, return null
-                if (pendingChanges.Count == 0)
-                {
-                    msg = null;
-                    return false;
-                }
-
-                //Create the arguments
-                LWRPToken[][] tokens = new LWRPToken[pendingChanges.Count + 1][];
-
-                //The first token is the index
-                tokens[0] = new LWRPToken[] { new LWRPToken(false, index.ToString()) };
-
-                //Add each of the arguments
-                int i = 1;
-                foreach (var c in pendingChanges)
-                    tokens[i++] = new LWRPToken[] { new LWRPToken(false, c.Key), c.Value };
-
-                //Clear pending changes
-                pendingChanges.Clear();
-
-                msg = new LWRPMessage(MessageName, tokens);
-                return true;
+                //No changes
+                msg = null;
+                return false;
             }
+
+            //Wrap
+            msg = new LWRPMessage(MessageName, tokens.ToArray());
+            return true;
         }
     }
 }

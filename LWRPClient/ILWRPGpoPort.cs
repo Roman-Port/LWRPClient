@@ -23,5 +23,15 @@ namespace LWRPClient
         /// True if changes are waiting to be applied.
         /// </summary>
         bool ChangesPending { get; }
+
+        /// <summary>
+        /// The user-defined name of this port on the server.
+        /// </summary>
+        string Name { get; set; }
+
+        /// <summary>
+        /// The source address of this port on the server.
+        /// </summary>
+        string SourceAddress { get; set; }
     }
 }

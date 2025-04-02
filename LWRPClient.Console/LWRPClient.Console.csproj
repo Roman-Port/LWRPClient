@@ -46,6 +46,9 @@
     <Reference Include="System.Xml" />
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Controls\DataTableControl.cs">
+      <SubType>Component</SubType>
+    </Compile>
     <Compile Include="Controls\GpioPinsControl.cs">
       <SubType>Component</SubType>
     </Compile>

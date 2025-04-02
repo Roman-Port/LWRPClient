@@ -57,8 +57,10 @@
             this.sourcesTab = new System.Windows.Forms.TabPage();
             this.destinationsTab = new System.Windows.Forms.TabPage();
             this.gpiTab = new System.Windows.Forms.TabPage();
-            this.gpiPanel = new System.Windows.Forms.Panel();
+            this.gpiTable = new LWRPClient.Console.Controls.DataTableControl();
             this.gpoTab = new System.Windows.Forms.TabPage();
+            this.gpoTable = new LWRPClient.Console.Controls.DataTableControl();
+            this.gpiPanel = new System.Windows.Forms.Panel();
             this.gpoPanel = new System.Windows.Forms.Panel();
             this.groupBox1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
@@ -67,6 +69,8 @@
             this.destinationsTab.SuspendLayout();
             this.gpiTab.SuspendLayout();
             this.gpoTab.SuspendLayout();
+            this.gpiPanel.SuspendLayout();
+            this.gpoPanel.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -377,14 +381,25 @@
             this.gpiTab.Text = "GPI";
             this.gpiTab.UseVisualStyleBackColor = true;
             // 
-            // gpiPanel
+            // gpiTable
             // 
-            this.gpiPanel.AutoScroll = true;
-            this.gpiPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gpiPanel.Location = new System.Drawing.Point(0, 0);
-            this.gpiPanel.Name = "gpiPanel";
-            this.gpiPanel.Size = new System.Drawing.Size(521, 374);
-            this.gpiPanel.TabIndex = 0;
+            this.gpiTable.AutoSize = true;
+            this.gpiTable.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.gpiTable.ColumnCount = 2;
+            this.gpiTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 50F));
+            this.gpiTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.gpiTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.gpiTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.gpiTable.Dock = System.Windows.Forms.DockStyle.Top;
+            this.gpiTable.Location = new System.Drawing.Point(0, 0);
+            this.gpiTable.Name = "gpiTable";
+            this.gpiTable.RowCount = 2;
+            this.gpiTable.RowHeight = 60;
+            this.gpiTable.RowSizeType = System.Windows.Forms.SizeType.Absolute;
+            this.gpiTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.gpiTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.gpiTable.Size = new System.Drawing.Size(521, 212);
+            this.gpiTable.TabIndex = 1;
             // 
             // gpoTab
             // 
@@ -396,9 +411,40 @@
             this.gpoTab.Text = "GPO";
             this.gpoTab.UseVisualStyleBackColor = true;
             // 
+            // gpoTable
+            // 
+            this.gpoTable.AutoSize = true;
+            this.gpoTable.AutoSizeMode = System.Windows.Forms.AutoSizeMode.GrowAndShrink;
+            this.gpoTable.ColumnCount = 4;
+            this.gpoTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 50F));
+            this.gpoTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 35F));
+            this.gpoTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 35F));
+            this.gpoTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 30F));
+            this.gpoTable.Dock = System.Windows.Forms.DockStyle.Top;
+            this.gpoTable.Location = new System.Drawing.Point(0, 0);
+            this.gpoTable.Name = "gpoTable";
+            this.gpoTable.RowCount = 2;
+            this.gpoTable.RowHeight = 60;
+            this.gpoTable.RowSizeType = System.Windows.Forms.SizeType.Absolute;
+            this.gpoTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.gpoTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.gpoTable.Size = new System.Drawing.Size(521, 212);
+            this.gpoTable.TabIndex = 0;
+            // 
+            // gpiPanel
+            // 
+            this.gpiPanel.AutoScroll = true;
+            this.gpiPanel.Controls.Add(this.gpiTable);
+            this.gpiPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gpiPanel.Location = new System.Drawing.Point(0, 0);
+            this.gpiPanel.Name = "gpiPanel";
+            this.gpiPanel.Size = new System.Drawing.Size(521, 374);
+            this.gpiPanel.TabIndex = 0;
+            // 
             // gpoPanel
             // 
             this.gpoPanel.AutoScroll = true;
+            this.gpoPanel.Controls.Add(this.gpoTable);
             this.gpoPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.gpoPanel.Location = new System.Drawing.Point(0, 0);
             this.gpoPanel.Name = "gpoPanel";
@@ -427,6 +473,10 @@
             this.destinationsTab.ResumeLayout(false);
             this.gpiTab.ResumeLayout(false);
             this.gpoTab.ResumeLayout(false);
+            this.gpiPanel.ResumeLayout(false);
+            this.gpiPanel.PerformLayout();
+            this.gpoPanel.ResumeLayout(false);
+            this.gpoPanel.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -466,6 +516,8 @@
         private System.Windows.Forms.Panel gpiPanel;
         private System.Windows.Forms.TabPage gpoTab;
         private System.Windows.Forms.Panel gpoPanel;
+        private LWRPClient.Console.Controls.DataTableControl gpoTable;
+        private Controls.DataTableControl gpiTable;
     }
 }
 

@@ -95,7 +95,7 @@ namespace LWRPClient.Core.GPIO
         /// <summary>
         /// A GPIO port
         /// </summary>
-        protected abstract class BaseGpioPort
+        protected abstract class BaseGpioPort : LwPropertyItem
         {
             public BaseGpioPort(LWRPConnection connection, int index)
             {

@@ -21,6 +21,7 @@ namespace LWRPClient.Core.GPIO
             //Bind to events
             connection.OnInfoDataReceived += Connection_OnInfoDataReceived;
             connection.SubscribeToMessage("GPO", OnStateUpdateMessageReceived);
+            connection.SubscribeToMessage("CFG", OnConfigUpdateMessageReceived);
         }
 
         private readonly GpoPort[] ports = new GpoPort[256];
@@ -40,8 +41,14 @@ namespace LWRPClient.Core.GPIO
             //Check if the device supports GPO. If it doesn't this will return a bad command error
             if (Count > 0)
             {
-                //Request info; This also subscribes us to updates
+                //Request state changes; This also subscribes us to updates
                 conn.transport.SendMessage(new LWRPMessage("ADD", new LWRPToken[][]
+                {
+                    new LWRPToken[] { new LWRPToken(false, "GPO") }
+                }));
+
+                //Then, request config
+                conn.transport.SendMessage(new LWRPMessage("CFG", new LWRPToken[][]
                 {
                     new LWRPToken[] { new LWRPToken(false, "GPO") }
                 }));
@@ -53,11 +60,37 @@ namespace LWRPClient.Core.GPIO
             }
         }
 
+        /// <summary>
+        /// Handles CFG commands for getting config of a GPO.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <param name="inGroup"></param>
+        protected void OnConfigUpdateMessageReceived(LWRPMessage message, bool inGroup)
+        {
+            //Check that the config type verb is "GPO"
+            if (message.Arguments[0][0].Content.ToUpper() != "GPO")
+                return;
+
+            //Get the GPO index (starting at 1)
+            int index = int.Parse(message.Arguments[1][0].Content);
+            GpoPort port = ports[index - 1];
+
+            //Apply changes to property to port, omitting header data
+            port.ProcessServerPropertyUpdate(message.Arguments, 2, message.Arguments.Length - 2);
+
+            //Enqueue for batch update
+            EnqueueReceivedUpdate(port, inGroup);
+        }
+
         internal override void Apply(IList<LWRPMessage> updates)
         {
             //Apply all state changes
             for (int i = 0; i < connection.GpoNum; i++)
                 ports[i].ApplyStateChanges(updates);
+
+            //Apply all property changes
+            for (int i = 0; i < connection.GpoNum; i++)
+                ports[i].ApplyPropertyChanges(updates);
         }
 
         class GpoPort : BaseGpioPort, ILWRPGpoPort
@@ -101,6 +134,24 @@ namespace LWRPClient.Core.GPIO
                         result = clientPinUpdatesMask != 0;
                     return result;
                 }
+            }
+
+            /// <summary>
+            /// The user-defined name of this port.
+            /// </summary>
+            public string Name
+            {
+                get => ReadPropertyString("NAME");
+                set => SetProperty("NAME", new LWRPToken(true, value));
+            }
+
+            /// <summary>
+            /// The source address.
+            /// </summary>
+            public string SourceAddress
+            {
+                get => ReadPropertyString("SRCA");
+                set => SetProperty("SRCA", new LWRPToken(true, value));
             }
 
             /// <summary>
@@ -150,6 +201,34 @@ namespace LWRPClient.Core.GPIO
                         clientPinUpdatesMask = 0;
                     }
                 }
+            }
+
+            /// <summary>
+            /// Since this also processes config data, we need to make sure that's recieved to mark this as ready.
+            /// </summary>
+            /// <returns></returns>
+            public override bool IsReady()
+            {
+                return base.IsReady() && PropertyDataReceived;
+            }
+
+            /// <summary>
+            /// If any property changes are needed, pushes the message to the messages list.
+            /// </summary>
+            /// <param name="messages"></param>
+            public void ApplyPropertyChanges(IList<LWRPMessage> messages)
+            {
+                //Start building
+                List<LWRPToken[]> tokens = new List<LWRPToken[]>();
+                tokens.Add(new LWRPToken[] { new LWRPToken(false, "GPO") }); // First token is "GPO"
+                tokens.Add(new LWRPToken[] { new LWRPToken(false, index.ToString()) }); // Second token is index
+
+                //Add arguments
+                if (!CreateUpdateMessageProperties(tokens))
+                    return; // No changes
+
+                //Wrap into message and add to list
+                messages.Add(new LWRPMessage("CFG", tokens.ToArray()));
             }
 
             /// <summary>

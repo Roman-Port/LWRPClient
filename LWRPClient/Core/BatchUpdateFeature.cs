@@ -51,7 +51,7 @@ namespace LWRPClient.Core
             }
 
             //Fire event
-            if (items.Length > 0)
+            if (items.Length > 0 && IsReady())
                 OnBatchUpdate?.Invoke(connection, items);
 
             //Automatically mark as ready

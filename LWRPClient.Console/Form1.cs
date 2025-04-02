@@ -1,4 +1,5 @@
-﻿using LWRPClient.Console.Panels;
+﻿using LWRPClient.Console.Controls;
+using LWRPClient.Console.Panels;
 using LWRPClient.Console.Properties;
 using LWRPClient.Layer1;
 using LWRPClient.Layer1.Transports;
@@ -166,38 +167,44 @@ namespace LWRPClient.Console
         {
             Invoke((MethodInvoker)delegate
             {
+                //Suspend
+                gpiTable.SuspendLayout();
+
+                //Loop
                 foreach (var s in updates)
                 {
-                    //Find the source control belonging to this, if it exists
-                    LwGpiControl ctrl = null;
-                    foreach (var c in gpiPanel.Controls)
-                    {
-                        if (c is LwGpiControl cs && cs.Index == s.Index)
-                        {
-                            ctrl = cs;
-                        }
-                    }
-
-                    //If not found, create it
-                    if (ctrl == null)
+                    //Find or create row
+                    int rowIndex = s.Index - 1;
+                    Control[] row;
+                    if (!gpiTable.TryGetRow(rowIndex, out row))
                     {
                         //Create
-                        ctrl = new LwGpiControl(s.Index)
+                        row = new Control[]
                         {
-                            Dock = DockStyle.Top,
-                            ReadOnly = true
+                            new Label
+                            {
+                                Dock = DockStyle.Fill,
+                                TextAlign = ContentAlignment.MiddleCenter,
+                                Text = s.Index.ToString()
+                            },
+                            new GpioPinsControl
+                            {
+                                Dock = DockStyle.Fill,
+                                ReadOnly = true
+                            }
                         };
 
-                        //Insert
-                        gpiPanel.Controls.Add(ctrl);
-
-                        //Sort
-                        gpiPanel.Controls.SetChildIndex(ctrl, 0);
+                        //Add
+                        gpiTable.InsertRow(rowIndex, row);
                     }
 
                     //Update
-                    ctrl.SetPins(s.Pins.ToArray());
+                    ((GpioPinsControl)row[1]).SetPins(s.Pins.ToArray());
                 }
+
+                //Resume
+                gpiTable.ResumeLayout();
+                gpiTable.PerformLayout();
             });
         }
 
@@ -205,46 +212,157 @@ namespace LWRPClient.Console
         {
             Invoke((MethodInvoker)delegate
             {
+                //Suspend
+                gpoTable.SuspendLayout();
+
+                //Loop
                 foreach (var s in updates)
                 {
-                    //Find the source control belonging to this, if it exists
-                    LwGpoControl ctrl = null;
-                    foreach (var c in gpoPanel.Controls)
+                    //Find or create row
+                    int rowIndex = s.Index - 1;
+                    Control[] row;
+                    if (!gpoTable.TryGetRow(rowIndex, out row))
                     {
-                        if (c is LwGpoControl cs && cs.Index == s.Index)
+                        //Create GPIO control
+                        GpioPinsControl io = new GpioPinsControl
                         {
-                            ctrl = cs;
-                        }
-                    }
+                            Dock = DockStyle.Fill,
+                            ReadOnly = false,
+                            Tag = s.Index
+                        };
+                        io.PinUpdated += GpoPinUserUpdate;
 
-                    //If not found, create it
-                    if (ctrl == null)
-                    {
-                        //Create
-                        ctrl = new LwGpoControl(s.Index)
+                        //Create the textboxes for fields
+                        TextBox nameField = new TextBox
                         {
                             Dock = DockStyle.Top,
-                            ReadOnly = false
+                            Tag = s
                         };
-                        ctrl.PinUpdated += GpoPinUserUpdate;
+                        TextBox addrField = new TextBox
+                        {
+                            Dock = DockStyle.Top,
+                            Tag = s
+                        };
 
-                        //Insert
-                        gpoPanel.Controls.Add(ctrl);
+                        //Create the row entry
+                        row = new Control[]
+                        {
+                            new Label
+                            {
+                                Dock = DockStyle.Fill,
+                                TextAlign = ContentAlignment.MiddleCenter,
+                                Text = s.Index.ToString()
+                            },
+                            CreateWrappedEditControl("Name", nameField),
+                            CreateWrappedEditControl("Address", addrField),
+                            io
+                        };
 
-                        //Sort
-                        gpoPanel.Controls.SetChildIndex(ctrl, 0);
+                        //Add
+                        gpoTable.InsertRow(rowIndex, row);
                     }
 
                     //Update
-                    ctrl.SetPins(s.Pins.ToArray());
+                    ((TextBox)row[1].Tag).TextChanged -= NameField_TextChanged;
+                    ((TextBox)row[1].Tag).Text = s.Name;
+                    ((TextBox)row[1].Tag).BackColor = SystemColors.Window;
+                    ((TextBox)row[1].Tag).TextChanged += NameField_TextChanged;
+
+                    ((TextBox)row[2].Tag).TextChanged -= AddrField_TextChanged;
+                    ((TextBox)row[2].Tag).Text = s.SourceAddress;
+                    ((TextBox)row[2].Tag).BackColor = SystemColors.Window;
+                    ((TextBox)row[2].Tag).TextChanged += AddrField_TextChanged;
+
+                    ((GpioPinsControl)row[3]).SetPins(s.Pins.ToArray());
                 }
+
+                //Resume
+                gpoTable.ResumeLayout();
+                gpoTable.PerformLayout();
             });
         }
 
-        private void GpoPinUserUpdate(LwGpoControl control, int index, LWRPPinState state)
+        private void NameField_TextChanged(object sender, EventArgs e)
+        {
+            TextBox box = (TextBox)sender;
+            box.BackColor = Color.Yellow;
+            ((ILWRPGpoPort)box.Tag).Name = box.Text;
+        }
+
+        private void AddrField_TextChanged(object sender, EventArgs e)
+        {
+            TextBox box = (TextBox)sender;
+            box.BackColor = Color.Yellow;
+            ((ILWRPGpoPort)box.Tag).SourceAddress = box.Text;
+        }
+
+        private TableLayoutPanel CreateWrappedEditControl(string label, Control content)
+        {
+            //Create the root layout panel
+            TableLayoutPanel root = new TableLayoutPanel
+            {
+                Dock = DockStyle.Fill,
+                AutoSize = true,
+                Tag = content,
+                Padding = new Padding(0),
+                Margin = new Padding(0)
+            };
+            root.SuspendLayout();
+
+            //Make label control
+            Label labelCtrl = new Label
+            {
+                Text = label,
+                Dock = DockStyle.Bottom,
+                AutoSize = true
+            };
+
+            //Set the middle two to be auto size and the outer to be filling
+            root.RowStyles.Clear();
+            root.RowStyles.Add(new RowStyle
+            {
+                Height = 0.5f,
+                SizeType = SizeType.Percent
+            });
+            root.RowStyles.Add(new RowStyle
+            {
+                SizeType = SizeType.AutoSize
+            });
+            root.RowStyles.Add(new RowStyle
+            {
+                SizeType = SizeType.AutoSize
+            });
+            root.RowStyles.Add(new RowStyle
+            {
+                Height = 0.5f,
+                SizeType = SizeType.Percent
+            });
+
+            //Configure the width to fill
+            root.ColumnStyles.Clear();
+            root.ColumnStyles.Add(new ColumnStyle
+            {
+                Width = 100,
+                SizeType = SizeType.Percent
+            });
+
+            //Add all controls
+            root.Controls.Add(new Panel(), 0, 0);
+            root.Controls.Add(labelCtrl, 0, 1);
+            root.Controls.Add(content, 0, 2);
+            root.Controls.Add(new Panel(), 0, 3);
+
+            //Resume layout
+            root.ResumeLayout();
+            root.PerformLayout();
+
+            return root;
+        }
+
+        private void GpoPinUserUpdate(GpioPinsControl control, int index, LWRPPinState state)
         {
             //Dispatch
-            conn.GPOs[control.Index - 1].Pins[index] = state;
+            conn.GPOs[(int)control.Tag - 1].Pins[index] = state;
         }
 
         private void Conn_OnMessageReceived(ILWRPTransport transport, LWRPMessage message)
@@ -353,8 +471,8 @@ namespace LWRPClient.Console
             //Clear sources and destinations
             sourcesPanel.Controls.Clear();
             dstPanel.Controls.Clear();
-            gpiPanel.Controls.Clear();
-            gpoPanel.Controls.Clear();
+            gpiTable.ClearRows();
+            gpoTable.ClearRows();
 
             //Reset readiness marks
             foreach (var t in tabControl.TabPages)
