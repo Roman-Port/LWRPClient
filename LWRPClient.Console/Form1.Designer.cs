@@ -57,20 +57,27 @@
             this.sourcesTab = new System.Windows.Forms.TabPage();
             this.destinationsTab = new System.Windows.Forms.TabPage();
             this.gpiTab = new System.Windows.Forms.TabPage();
-            this.gpiTable = new LWRPClient.Console.Controls.DataTableControl();
-            this.gpoTab = new System.Windows.Forms.TabPage();
-            this.gpoTable = new LWRPClient.Console.Controls.DataTableControl();
             this.gpiPanel = new System.Windows.Forms.Panel();
+            this.gpoTab = new System.Windows.Forms.TabPage();
             this.gpoPanel = new System.Windows.Forms.Panel();
+            this.tabMeters = new System.Windows.Forms.TabPage();
+            this.panel1 = new System.Windows.Forms.Panel();
+            this.meterTable = new System.Windows.Forms.TableLayoutPanel();
+            this.btnMeterRefresh = new System.Windows.Forms.Button();
+            this.gpiTable = new LWRPClient.Console.Controls.DataTableControl();
+            this.gpoTable = new LWRPClient.Console.Controls.DataTableControl();
+            this.checkAutoMeterRefresh = new System.Windows.Forms.CheckBox();
             this.groupBox1.SuspendLayout();
             this.tableLayoutPanel1.SuspendLayout();
             this.tabControl.SuspendLayout();
             this.sourcesTab.SuspendLayout();
             this.destinationsTab.SuspendLayout();
             this.gpiTab.SuspendLayout();
-            this.gpoTab.SuspendLayout();
             this.gpiPanel.SuspendLayout();
+            this.gpoTab.SuspendLayout();
             this.gpoPanel.SuspendLayout();
+            this.tabMeters.SuspendLayout();
+            this.panel1.SuspendLayout();
             this.SuspendLayout();
             // 
             // btnConnect
@@ -297,7 +304,6 @@
             // sourcesPanel
             // 
             this.sourcesPanel.AutoScroll = true;
-            this.sourcesPanel.Dock = System.Windows.Forms.DockStyle.Fill;
             this.sourcesPanel.Location = new System.Drawing.Point(3, 3);
             this.sourcesPanel.Name = "sourcesPanel";
             this.sourcesPanel.Size = new System.Drawing.Size(515, 368);
@@ -343,6 +349,7 @@
             this.tabControl.Controls.Add(this.destinationsTab);
             this.tabControl.Controls.Add(this.gpiTab);
             this.tabControl.Controls.Add(this.gpoTab);
+            this.tabControl.Controls.Add(this.tabMeters);
             this.tabControl.Location = new System.Drawing.Point(12, 124);
             this.tabControl.Name = "tabControl";
             this.tabControl.SelectedIndex = 0;
@@ -381,6 +388,90 @@
             this.gpiTab.Text = "GPI";
             this.gpiTab.UseVisualStyleBackColor = true;
             // 
+            // gpiPanel
+            // 
+            this.gpiPanel.AutoScroll = true;
+            this.gpiPanel.Controls.Add(this.gpiTable);
+            this.gpiPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gpiPanel.Location = new System.Drawing.Point(0, 0);
+            this.gpiPanel.Name = "gpiPanel";
+            this.gpiPanel.Size = new System.Drawing.Size(521, 374);
+            this.gpiPanel.TabIndex = 0;
+            // 
+            // gpoTab
+            // 
+            this.gpoTab.Controls.Add(this.gpoPanel);
+            this.gpoTab.Location = new System.Drawing.Point(4, 22);
+            this.gpoTab.Name = "gpoTab";
+            this.gpoTab.Size = new System.Drawing.Size(521, 374);
+            this.gpoTab.TabIndex = 3;
+            this.gpoTab.Text = "GPO";
+            this.gpoTab.UseVisualStyleBackColor = true;
+            // 
+            // gpoPanel
+            // 
+            this.gpoPanel.AutoScroll = true;
+            this.gpoPanel.Controls.Add(this.gpoTable);
+            this.gpoPanel.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.gpoPanel.Location = new System.Drawing.Point(0, 0);
+            this.gpoPanel.Name = "gpoPanel";
+            this.gpoPanel.Size = new System.Drawing.Size(521, 374);
+            this.gpoPanel.TabIndex = 1;
+            // 
+            // tabMeters
+            // 
+            this.tabMeters.Controls.Add(this.checkAutoMeterRefresh);
+            this.tabMeters.Controls.Add(this.panel1);
+            this.tabMeters.Controls.Add(this.btnMeterRefresh);
+            this.tabMeters.Location = new System.Drawing.Point(4, 22);
+            this.tabMeters.Name = "tabMeters";
+            this.tabMeters.Padding = new System.Windows.Forms.Padding(3);
+            this.tabMeters.Size = new System.Drawing.Size(521, 374);
+            this.tabMeters.TabIndex = 4;
+            this.tabMeters.Text = "Meters";
+            this.tabMeters.UseVisualStyleBackColor = true;
+            // 
+            // panel1
+            // 
+            this.panel1.Anchor = ((System.Windows.Forms.AnchorStyles)((((System.Windows.Forms.AnchorStyles.Top | System.Windows.Forms.AnchorStyles.Bottom) 
+            | System.Windows.Forms.AnchorStyles.Left) 
+            | System.Windows.Forms.AnchorStyles.Right)));
+            this.panel1.AutoScroll = true;
+            this.panel1.Controls.Add(this.meterTable);
+            this.panel1.Location = new System.Drawing.Point(6, 6);
+            this.panel1.Name = "panel1";
+            this.panel1.Size = new System.Drawing.Size(509, 333);
+            this.panel1.TabIndex = 1;
+            // 
+            // meterTable
+            // 
+            this.meterTable.AutoSize = true;
+            this.meterTable.ColumnCount = 2;
+            this.meterTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Percent, 100F));
+            this.meterTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.meterTable.ColumnStyles.Add(new System.Windows.Forms.ColumnStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.meterTable.Dock = System.Windows.Forms.DockStyle.Left;
+            this.meterTable.Location = new System.Drawing.Point(0, 0);
+            this.meterTable.Name = "meterTable";
+            this.meterTable.RowCount = 4;
+            this.meterTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.meterTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.meterTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
+            this.meterTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Absolute, 20F));
+            this.meterTable.Size = new System.Drawing.Size(20, 333);
+            this.meterTable.TabIndex = 0;
+            // 
+            // btnMeterRefresh
+            // 
+            this.btnMeterRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.btnMeterRefresh.Location = new System.Drawing.Point(440, 345);
+            this.btnMeterRefresh.Name = "btnMeterRefresh";
+            this.btnMeterRefresh.Size = new System.Drawing.Size(75, 23);
+            this.btnMeterRefresh.TabIndex = 0;
+            this.btnMeterRefresh.Text = "Refresh";
+            this.btnMeterRefresh.UseVisualStyleBackColor = true;
+            this.btnMeterRefresh.Click += new System.EventHandler(this.btnMeterRefresh_Click);
+            // 
             // gpiTable
             // 
             this.gpiTable.AutoSize = true;
@@ -398,18 +489,8 @@
             this.gpiTable.RowSizeType = System.Windows.Forms.SizeType.Absolute;
             this.gpiTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.gpiTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.gpiTable.Size = new System.Drawing.Size(521, 212);
+            this.gpiTable.Size = new System.Drawing.Size(521, 0);
             this.gpiTable.TabIndex = 1;
-            // 
-            // gpoTab
-            // 
-            this.gpoTab.Controls.Add(this.gpoPanel);
-            this.gpoTab.Location = new System.Drawing.Point(4, 22);
-            this.gpoTab.Name = "gpoTab";
-            this.gpoTab.Size = new System.Drawing.Size(521, 374);
-            this.gpoTab.TabIndex = 3;
-            this.gpoTab.Text = "GPO";
-            this.gpoTab.UseVisualStyleBackColor = true;
             // 
             // gpoTable
             // 
@@ -428,28 +509,19 @@
             this.gpoTable.RowSizeType = System.Windows.Forms.SizeType.Absolute;
             this.gpoTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
             this.gpoTable.RowStyles.Add(new System.Windows.Forms.RowStyle(System.Windows.Forms.SizeType.Percent, 50F));
-            this.gpoTable.Size = new System.Drawing.Size(521, 212);
+            this.gpoTable.Size = new System.Drawing.Size(521, 0);
             this.gpoTable.TabIndex = 0;
             // 
-            // gpiPanel
+            // checkAutoMeterRefresh
             // 
-            this.gpiPanel.AutoScroll = true;
-            this.gpiPanel.Controls.Add(this.gpiTable);
-            this.gpiPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gpiPanel.Location = new System.Drawing.Point(0, 0);
-            this.gpiPanel.Name = "gpiPanel";
-            this.gpiPanel.Size = new System.Drawing.Size(521, 374);
-            this.gpiPanel.TabIndex = 0;
-            // 
-            // gpoPanel
-            // 
-            this.gpoPanel.AutoScroll = true;
-            this.gpoPanel.Controls.Add(this.gpoTable);
-            this.gpoPanel.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.gpoPanel.Location = new System.Drawing.Point(0, 0);
-            this.gpoPanel.Name = "gpoPanel";
-            this.gpoPanel.Size = new System.Drawing.Size(521, 374);
-            this.gpoPanel.TabIndex = 1;
+            this.checkAutoMeterRefresh.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Right)));
+            this.checkAutoMeterRefresh.AutoSize = true;
+            this.checkAutoMeterRefresh.Location = new System.Drawing.Point(389, 349);
+            this.checkAutoMeterRefresh.Name = "checkAutoMeterRefresh";
+            this.checkAutoMeterRefresh.Size = new System.Drawing.Size(48, 17);
+            this.checkAutoMeterRefresh.TabIndex = 2;
+            this.checkAutoMeterRefresh.Text = "Auto";
+            this.checkAutoMeterRefresh.UseVisualStyleBackColor = true;
             // 
             // Form1
             // 
@@ -472,11 +544,15 @@
             this.sourcesTab.ResumeLayout(false);
             this.destinationsTab.ResumeLayout(false);
             this.gpiTab.ResumeLayout(false);
-            this.gpoTab.ResumeLayout(false);
             this.gpiPanel.ResumeLayout(false);
             this.gpiPanel.PerformLayout();
+            this.gpoTab.ResumeLayout(false);
             this.gpoPanel.ResumeLayout(false);
             this.gpoPanel.PerformLayout();
+            this.tabMeters.ResumeLayout(false);
+            this.tabMeters.PerformLayout();
+            this.panel1.ResumeLayout(false);
+            this.panel1.PerformLayout();
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -518,6 +594,11 @@
         private System.Windows.Forms.Panel gpoPanel;
         private LWRPClient.Console.Controls.DataTableControl gpoTable;
         private Controls.DataTableControl gpiTable;
+        private System.Windows.Forms.TabPage tabMeters;
+        private System.Windows.Forms.Button btnMeterRefresh;
+        private System.Windows.Forms.Panel panel1;
+        private System.Windows.Forms.TableLayoutPanel meterTable;
+        private System.Windows.Forms.CheckBox checkAutoMeterRefresh;
     }
 }
 

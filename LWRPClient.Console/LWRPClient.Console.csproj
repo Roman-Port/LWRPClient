@@ -55,6 +55,12 @@
     <Compile Include="Controls\GpioPinsControl.Designer.cs">
       <DependentUpon>GpioPinsControl.cs</DependentUpon>
     </Compile>
+    <Compile Include="Controls\VuMeter.cs">
+      <SubType>Component</SubType>
+    </Compile>
+    <Compile Include="Controls\VuMeter.Designer.cs">
+      <DependentUpon>VuMeter.cs</DependentUpon>
+    </Compile>
     <Compile Include="Form1.cs">
       <SubType>Form</SubType>
     </Compile>

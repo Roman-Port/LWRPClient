@@ -1,6 +1,7 @@
 ﻿using LWRPClient.Console.Controls;
 using LWRPClient.Console.Panels;
 using LWRPClient.Console.Properties;
+using LWRPClient.Entities;
 using LWRPClient.Layer1;
 using LWRPClient.Layer1.Transports;
 using System;
@@ -55,6 +56,7 @@ namespace LWRPClient.Console
                 conn.GPOs.OnBatchUpdate += GPOs_OnBatchUpdate;
                 BindTabReady(conn.GPOs.WaitForReadyAsync(), gpoTab);
                 conn.OnConnectionStateUpdate += Conn_OnConnectionStateUpdate;
+                conn.OnMeterLevelsUpdated += Conn_OnMeterLevelsUpdated;
                 
                 conn.Initialize();
 
@@ -65,6 +67,7 @@ namespace LWRPClient.Console
                 //Set button text and state
                 btnConnect.Enabled = false;
                 btnConnect.Text = "Connect";
+                btnMeterRefresh.Enabled = true;
 
                 //Dispose of client
                 conn.Dispose();
@@ -88,6 +91,7 @@ namespace LWRPClient.Console
 
                 //Enable connected
                 btnApply.Enabled = true;
+                btnMeterRefresh.Enabled = true;
             });
         }
 
@@ -432,6 +436,12 @@ namespace LWRPClient.Console
 
             //Reset GUI
             ClearGui();
+
+            //Start meter refresher
+            meterRefreshTimer = new Timer();
+            meterRefreshTimer.Tick += MeterRefreshTimer_Tick;
+            meterRefreshTimer.Interval = 100;
+            meterRefreshTimer.Start();
         }
 
         private void btnApply_Click(object sender, EventArgs e)
@@ -473,10 +483,106 @@ namespace LWRPClient.Console
             dstPanel.Controls.Clear();
             gpiTable.ClearRows();
             gpoTable.ClearRows();
+            meterTable.Controls.Clear();
+            meterChannelsI.Clear();
+            meterChannelsO.Clear();
 
             //Reset readiness marks
             foreach (var t in tabControl.TabPages)
                 ((TabPage)t).Text = ((TabPage)t).Text.TrimEnd('*');
         }
+
+        #region METERING
+
+        private int meterConfiguredColumns;
+        private Dictionary<int, VuMeter> meterChannelsI = new Dictionary<int, VuMeter>();
+        private Dictionary<int, VuMeter> meterChannelsO = new Dictionary<int, VuMeter>();
+        private Timer meterRefreshTimer;
+        private Task lastRefreshTask;
+
+        private void MeterRefreshTimer_Tick(object sender, EventArgs e)
+        {
+            if (checkAutoMeterRefresh.Checked && conn != null && (lastRefreshTask == null || lastRefreshTask.IsCompleted))
+                lastRefreshTask = conn.RequestMetersAsync();
+        }
+
+        private void btnMeterRefresh_Click(object sender, EventArgs e)
+        {
+            if (lastRefreshTask == null || lastRefreshTask.IsCompleted)
+                lastRefreshTask = conn.RequestMetersAsync();
+        }
+
+        private void Conn_OnMeterLevelsUpdated(LWRPConnection conn, Entities.MeterChannelReading[] ich, Entities.MeterChannelReading[] och)
+        {
+            Invoke((MethodInvoker)delegate
+            {
+                //Find the max channel required
+                int maxChannel = 0;
+                foreach (var c in ich)
+                    maxChannel = Math.Max(maxChannel, c.Index);
+                foreach (var c in och)
+                    maxChannel = Math.Max(maxChannel, c.Index);
+
+                //Make sure columns are created up to this
+                meterTable.ColumnCount = maxChannel;
+                while (meterConfiguredColumns < maxChannel)
+                {
+                    if (meterConfiguredColumns >= meterTable.ColumnStyles.Count)
+                        meterTable.ColumnStyles.Add(new ColumnStyle());
+                    meterTable.ColumnStyles[meterConfiguredColumns].Width = 60;
+                    meterTable.ColumnStyles[meterConfiguredColumns].SizeType = SizeType.Absolute;
+                    meterConfiguredColumns++;
+                }
+
+                //Set
+                SetMeters(meterChannelsI, ich, "I-", 0);
+                SetMeters(meterChannelsO, och, "O-", 2);
+            });
+        }
+
+        private void SetMeters(Dictionary<int, VuMeter> meters, MeterChannelReading[] readings, string prefix, int rowOffset)
+        {
+            //Loop through readings
+            foreach (var r in readings)
+            {
+                //Get index from 0
+                int index = r.Index - 1;
+
+                //Check if it's been created
+                VuMeter meter;
+                if (!meters.TryGetValue(index, out meter))
+                {
+                    //Create VU meter
+                    meter = new VuMeter
+                    {
+                        Dock = DockStyle.Fill,
+                        MinValue = -100,
+                        MaxValue = 0,
+                        ValueL = -100,
+                        ValueR = -100,
+                        ForeColor = Color.FromArgb(68, 120, 242)
+                    };
+                    meterTable.Controls.Add(meter, index, rowOffset);
+
+                    //Create textbox
+                    meterTable.Controls.Add(new Label
+                    {
+                        Text = prefix + r.Index.ToString(),
+                        Dock = DockStyle.Fill,
+                        TextAlign = ContentAlignment.MiddleCenter,
+                        AutoSize = true
+                    }, index, rowOffset + 1);
+
+                    //Add
+                    meters.Add(index, meter);
+                }
+
+                //Update
+                meter.ValueL = readings[index].Peek.L;
+                meter.ValueR = readings[index].Peek.R;
+            }
+        }
+
+        #endregion
     }
 }

@@ -16,7 +16,7 @@ using LWRPClient.Core.GPIO;
 
 namespace LWRPClient
 {
-    public class LWRPConnection : IDisposable
+    public partial class LWRPConnection : IDisposable
     {
         public delegate void InfoDataReceivedEventArgs(LWRPConnection conn);
         public delegate void ConnectionStateUpdateEventArgs(LWRPConnection conn, LWRPState state);
@@ -471,6 +471,7 @@ namespace LWRPClient
                 case "BEGIN": ProcessBeginGroup(); break;
                 case "END": ProcessEndGroup(); break;
                 case "VER": ProcessVer(message); break;
+                case "MTR": ProcessMeter(message); break;
             }
 
             //Dispatch to subscriptions - First find targets
@@ -490,6 +491,9 @@ namespace LWRPClient
 
             //Fire event
             OnGroupProcessingBegin?.Invoke(this);
+
+            //Dispatch to internal components
+            MeterProcessBeginGroup();
         }
 
         private void ProcessEndGroup()
@@ -499,6 +503,9 @@ namespace LWRPClient
 
             //Fire event
             OnGroupProcessingEnd?.Invoke(this);
+
+            //Dispatch to internal components
+            MeterProcessEndGroup();
         }
 
         private void ProcessVer(LWRPMessage message)
